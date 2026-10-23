@@ -1,0 +1,64 @@
+name: 🐞 报告问题
+description: 报告一个可复现的缺陷
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！提交前请先搜索现有 Issue。
+        **请勿粘贴真实机房数据**（设备名、组播地址、内网 IP）——贴图或导出 JSON 前请先脱敏，或改用 `data/sample-system-diagram.json` 复现。
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 从打开页面开始，一步一步写到出问题的地方
+      placeholder: |
+        1. 双击 sysflow.html 打开
+        2. 点「导入」选择 data/sample-system-diagram.json
+        3. 切到「IP 路由」视图
+        4. 点击流面板中的第一路流
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+      placeholder: 应该看到……
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+      placeholder: 实际是……（如有报错，请贴 Console 原文）
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: 环境
+      description: 浏览器与版本 / 操作系统
+      placeholder: Chrome 130 / Windows 11
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 截图或控制台报错（可选）
+      description: 图片可直接拖进来，或粘贴 F12 → Console 的报错文本
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 数据脱敏确认
+      options:
+        - label: 我已确认截图、文本与附件中不含真实设备名、组播地址或内网 IP
+          required: true

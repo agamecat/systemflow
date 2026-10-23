@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 使用提问 / 想法讨论
+    url: https://github.com/agamecat/systemflow/discussions
+    about: 不确定是不是 bug、想知道怎么用、想聊想法，请到 Discussions
+  - name: 🔐 报告安全漏洞
+    url: https://github.com/agamecat/systemflow/security/advisories/new
+    about: 请勿公开提交安全问题，使用私密漏洞报告（见 SECURITY.md）
