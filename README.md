@@ -51,6 +51,17 @@ cd systemflow && open sysflow.html        # macOS；Windows 直接双击文件�
 - 示例数据（合成、可复现）：[`data/README.md`](data/README.md)
 - 端到端自检脚本：[`tools/e2e.cjs`](tools/e2e.cjs)
 
+## 参与贡献
+
+| 你想做什么 | 去哪里 |
+| --- | --- |
+| 报告 bug、提功能建议 | [Issues](https://github.com/agamecat/systemflow/issues)（有表单模板，请按提示填写） |
+| 问用法、聊想法 | [Discussions](https://github.com/agamecat/systemflow/discussions) |
+| 改代码、提 PR | 先读 [`CONTRIBUTING.md`](CONTRIBUTING.md)，里面有代码风格与自检命令 |
+| 报告安全漏洞 | **不要公开提交**，走 [`SECURITY.md`](SECURITY.md) 里的私密通道 |
+
+参与本项目即表示同意遵守 [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)。
+
 ## License
 
 [MIT](LICENSE) © 2026 agamecat
