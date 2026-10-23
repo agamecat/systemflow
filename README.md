@@ -6,6 +6,8 @@
 
 零依赖 · 单文件 · 离线可用 · 双击即开
 
+[![CI](https://github.com/agamecat/systemflow/actions/workflows/ci.yml/badge.svg)](https://github.com/agamecat/systemflow/actions/workflows/ci.yml)
+
 </div>
 
 <!-- TODO(agamecat)：demo.gif 目前是占位图。录一段 10 秒左右的真实操作（拖设备 → 拖线连接 →
