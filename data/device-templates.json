@@ -1,0 +1,71 @@
+[
+  {
+    "id": "tpl_encoder",
+    "type": "Encoder",
+    "name": "编码器",
+    "description": "Mock 模板：单路 IP 组播输出",
+    "ports": [
+      {
+        "number": "1",
+        "type": "ip_port",
+        "direction": "out",
+        "bidirectional": true,
+        "program": ""
+      }
+    ],
+    "inner_links": []
+  },
+  {
+    "id": "tpl_router",
+    "type": "Router",
+    "name": "路由器",
+    "description": "Mock 模板：4 口双向 IP 路由",
+    "ports": [
+      {
+        "number": "1",
+        "type": "ip_port",
+        "direction": "in",
+        "bidirectional": true,
+        "program": ""
+      },
+      {
+        "number": "2",
+        "type": "ip_port",
+        "direction": "in",
+        "bidirectional": true,
+        "program": ""
+      },
+      {
+        "number": "3",
+        "type": "ip_port",
+        "direction": "out",
+        "bidirectional": true,
+        "program": ""
+      },
+      {
+        "number": "4",
+        "type": "ip_port",
+        "direction": "out",
+        "bidirectional": true,
+        "program": ""
+      }
+    ],
+    "inner_links": []
+  },
+  {
+    "id": "tpl_recorder",
+    "type": "Recorder",
+    "name": "录制器",
+    "description": "Mock 模板：单路 IP 组播录制",
+    "ports": [
+      {
+        "number": "1",
+        "type": "ip_port",
+        "direction": "in",
+        "bidirectional": true,
+        "program": ""
+      }
+    ],
+    "inner_links": []
+  }
+]

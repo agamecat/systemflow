@@ -1,0 +1,398 @@
+{
+  "app": "sysflow",
+  "schemaVersion": 2,
+  "name": "Sample System",
+  "graph": {
+    "version": 2,
+    "name": "Sample System",
+    "devices": [
+      {
+        "id": "n1",
+        "name": "Node01",
+        "type": "Encoder",
+        "ports": [
+          {
+            "id": "n1_p1",
+            "number": "1",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc_s1_out",
+                "address": "udp://239.0.0.11:5000",
+                "name": "Stream 01"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "n2",
+        "name": "Node02",
+        "type": "Encoder",
+        "ports": [
+          {
+            "id": "n2_p1",
+            "number": "1",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc_s2_out",
+                "address": "udp://239.0.0.12:5000",
+                "name": "Stream 02"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "n3",
+        "name": "Node03",
+        "type": "Encoder",
+        "ports": [
+          {
+            "id": "n3_p1",
+            "number": "1",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc_s3_out",
+                "address": "udp://239.0.0.13:5000",
+                "name": "Stream 03"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "n4",
+        "name": "Node04",
+        "type": "Net-Switch",
+        "ports": [
+          {
+            "id": "n4_p1",
+            "number": "1",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_s1_swin",
+                "address": "udp://239.0.0.11:5000",
+                "name": "Stream 01"
+              }
+            ],
+            "multicast_out": []
+          },
+          {
+            "id": "n4_p2",
+            "number": "2",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_s2_swin",
+                "address": "udp://239.0.0.12:5000",
+                "name": "Stream 02"
+              }
+            ],
+            "multicast_out": []
+          },
+          {
+            "id": "n4_p3",
+            "number": "3",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_s3_swin",
+                "address": "udp://239.0.0.13:5000",
+                "name": "Stream 03"
+              }
+            ],
+            "multicast_out": []
+          },
+          {
+            "id": "n4_p4",
+            "number": "4",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "n4_p5",
+            "number": "5",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc_s1_swout",
+                "address": "udp://239.0.0.11:5000",
+                "name": "Stream 01"
+              }
+            ]
+          },
+          {
+            "id": "n4_p6",
+            "number": "6",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc_s2_swout",
+                "address": "udp://239.0.0.12:5000",
+                "name": "Stream 02"
+              }
+            ]
+          },
+          {
+            "id": "n4_p7",
+            "number": "7",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc_s3_swout",
+                "address": "udp://239.0.0.13:5000",
+                "name": "Stream 03"
+              }
+            ]
+          },
+          {
+            "id": "n4_p8",
+            "number": "8",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "n5",
+        "name": "Node05",
+        "type": "Monitor",
+        "ports": [
+          {
+            "id": "n5_p1",
+            "number": "1",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_s1_m1",
+                "address": "udp://239.0.0.11:5000",
+                "name": "Stream 01"
+              }
+            ],
+            "multicast_out": []
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "n6",
+        "name": "Node06",
+        "type": "Monitor",
+        "ports": [
+          {
+            "id": "n6_p1",
+            "number": "1",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_s2_m2",
+                "address": "udp://239.0.0.12:5000",
+                "name": "Stream 02"
+              }
+            ],
+            "multicast_out": []
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "n7",
+        "name": "Node07",
+        "type": "Recorder",
+        "ports": [
+          {
+            "id": "n7_p1",
+            "number": "1",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_s3_r1",
+                "address": "udp://239.0.0.13:5000",
+                "name": "Stream 03"
+              }
+            ],
+            "multicast_out": []
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      }
+    ],
+    "links": [
+      {
+        "id": "l1",
+        "signal_type": "ip",
+        "from": {
+          "device": "n1",
+          "port": "n1_p1"
+        },
+        "to": {
+          "device": "n4",
+          "port": "n4_p1"
+        }
+      },
+      {
+        "id": "l2",
+        "signal_type": "ip",
+        "from": {
+          "device": "n2",
+          "port": "n2_p1"
+        },
+        "to": {
+          "device": "n4",
+          "port": "n4_p2"
+        }
+      },
+      {
+        "id": "l3",
+        "signal_type": "ip",
+        "from": {
+          "device": "n3",
+          "port": "n3_p1"
+        },
+        "to": {
+          "device": "n4",
+          "port": "n4_p3"
+        }
+      },
+      {
+        "id": "l4",
+        "signal_type": "ip",
+        "from": {
+          "device": "n4",
+          "port": "n4_p5"
+        },
+        "to": {
+          "device": "n5",
+          "port": "n5_p1"
+        }
+      },
+      {
+        "id": "l5",
+        "signal_type": "ip",
+        "from": {
+          "device": "n4",
+          "port": "n4_p6"
+        },
+        "to": {
+          "device": "n6",
+          "port": "n6_p1"
+        }
+      },
+      {
+        "id": "l6",
+        "signal_type": "ip",
+        "from": {
+          "device": "n4",
+          "port": "n4_p7"
+        },
+        "to": {
+          "device": "n7",
+          "port": "n7_p1"
+        }
+      }
+    ]
+  },
+  "layout": {
+    "version": 1,
+    "nodes": {
+      "n1": {
+        "x": 80,
+        "y": 120
+      },
+      "n2": {
+        "x": 80,
+        "y": 310
+      },
+      "n3": {
+        "x": 80,
+        "y": 500
+      },
+      "n4": {
+        "x": 430,
+        "y": 230
+      },
+      "n5": {
+        "x": 840,
+        "y": 120
+      },
+      "n6": {
+        "x": 840,
+        "y": 320
+      },
+      "n7": {
+        "x": 840,
+        "y": 520
+      }
+    },
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  }
+}

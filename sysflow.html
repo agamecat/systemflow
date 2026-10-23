@@ -1,0 +1,3103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SysFlow · 基带 IP 信号流图</title>
+<style>
+/* ============================================================================
+   SysFlow —— 深色工作台视觉层
+   设计口径：单一深色主题；三层表面（底/浮层/卡片）；青色主色 + 类型色点缀；
+   所有图标用 Unicode，零外部依赖；动效只做 150ms 级别的反馈。
+   ========================================================================= */
+:root{
+  /* 表面 */
+  --bg:#070c16;
+  --bg-soft:#0a1120;
+  --surface:rgba(15,26,43,.86);
+  --surface-solid:#0f1a2b;
+  --surface-2:#132133;
+  --surface-3:#18283e;
+  /* 描边 */
+  --hair:rgba(148,163,184,.14);
+  --hair-strong:rgba(148,163,184,.26);
+  /* 文字 */
+  --text:#e6edf7;
+  --muted:#9db0c8;
+  --dim:#6b7f99;
+  /* 主色与语义色 */
+  --accent:#38bdf8;
+  --accent-deep:#1c6f9f;
+  --violet:#818cf8;
+  --ok:#34d399;
+  --warn:#fbbf24;
+  --danger:#f87171;
+  /* 信号类型色 */
+  --sdi:#5fc46b; --asi:#c76bb4; --ip:#4aa3df;
+  --radius:14px;
+  --shadow-1:0 1px 2px rgba(0,0,0,.35);
+  --shadow-2:0 10px 30px rgba(0,0,0,.45);
+  --shadow-3:0 24px 64px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--text); background:var(--bg);
+  font:13px/1.5 "Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  overflow:hidden; -webkit-font-smoothing:antialiased;
+}
+::selection{background:rgba(56,189,248,.28)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#1e2f47;border-radius:8px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#2b405d;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+button,input,select,textarea{font-family:inherit}
+.hidden{display:none !important}
+
+/* ---------- 顶栏 ---------- */
+#app{display:flex;flex-direction:column;height:100%}
+#topbar{
+  position:relative;display:flex;align-items:center;gap:7px;padding:0 12px;height:52px;flex:0 0 52px;
+  background:linear-gradient(180deg,rgba(20,34,54,.96),rgba(10,17,30,.96));
+  border-bottom:1px solid rgba(56,189,248,.10);
+  box-shadow:0 1px 0 rgba(255,255,255,.03), 0 8px 24px rgba(0,0,0,.35);
+  overflow-x:auto;overflow-y:hidden;z-index:20;
+}
+#topbar::-webkit-scrollbar{height:0}
+.brand{display:flex;align-items:center;gap:9px;padding-right:4px;white-space:nowrap;flex:0 0 auto}
+.brand .logo{
+  width:28px;height:28px;border-radius:9px;display:grid;place-items:center;
+  background:linear-gradient(150deg,#38bdf8,#2563eb 70%);
+  box-shadow:0 4px 14px rgba(56,189,248,.35), inset 0 1px 0 rgba(255,255,255,.35);
+  color:#06121f;font-weight:800;font-size:15px;letter-spacing:-.5px;font-style:normal;
+}
+.brand .bt{display:flex;flex-direction:column;line-height:1.15}
+.brand b{font-size:14.5px;font-weight:650;letter-spacing:.2px;color:#f3f8ff}
+.brand span{font-size:10px;color:var(--dim);letter-spacing:.4px}
+
+#graphName{
+  width:176px;height:32px;flex:0 0 auto;
+  background:rgba(8,15,27,.7);border:1px solid var(--hair);border-radius:9px;
+  color:var(--text);padding:0 10px;outline:none;font-size:12.5px;
+  transition:border-color .15s, box-shadow .15s, background .15s;
+}
+#graphName:hover{border-color:var(--hair-strong);background:rgba(12,22,38,.8)}
+#graphName:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.14);background:rgba(10,18,32,.9)}
+
+.seg{
+  display:flex;align-items:center;gap:2px;padding:3px;flex:0 0 auto;
+  background:rgba(6,12,22,.72);border:1px solid var(--hair);border-radius:11px;
+}
+.seg button{
+  height:26px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--muted);
+  cursor:pointer;font-size:12px;white-space:nowrap;transition:.15s;
+}
+.seg button:hover:not(.active){color:var(--text);background:rgba(148,163,184,.10)}
+.seg button.active{
+  color:#f8fcff;background:linear-gradient(180deg,#2790c9,#186489);
+  box-shadow:0 2px 10px rgba(56,189,248,.25), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.spacer{flex:1 1 auto;min-width:8px}
+.vsep{width:1px;height:20px;background:var(--hair);margin:0 3px;flex:0 0 1px}
+
+.btn{
+  height:32px;padding:0 11px;display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--hair);border-radius:9px;
+  background:rgba(24,38,58,.72);color:#cbdaec;cursor:pointer;font-size:12px;white-space:nowrap;
+  transition:background .15s,border-color .15s,color .15s,transform .12s,box-shadow .15s;
+}
+.btn:hover{background:rgba(38,58,86,.9);border-color:var(--hair-strong);color:#f6faff;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.btn:active{transform:translateY(0);box-shadow:none}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(56,189,248,.22)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.primary{
+  background:linear-gradient(180deg,#2d97d3,#1b6d9c);border-color:#3ea7e2;color:#f8fcff;
+  box-shadow:0 3px 14px rgba(56,189,248,.28), inset 0 1px 0 rgba(255,255,255,.25);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#3aa6e2,#2180b5);box-shadow:0 6px 18px rgba(56,189,248,.35)}
+.btn.soft{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.soft:hover{background:rgba(148,163,184,.10);color:var(--text);border-color:transparent;transform:none}
+.btn.danger{color:#fecaca;border-color:rgba(248,113,113,.35);background:rgba(60,24,30,.6)}
+.btn.danger:hover{background:rgba(80,30,38,.8)}
+.btn.icon{width:32px;padding:0;justify-content:center;font-size:15px;color:#b9cbe0}
+
+/* ---------- 画布 ---------- */
+#stage{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;display:flex}
+#canvasWrap{position:relative;flex:1 1 auto;min-width:0;overflow:hidden}
+#canvas{position:absolute;inset:0;touch-action:none}
+#canvas svg{
+  display:block;width:100%;height:100%;
+  background:
+    radial-gradient(1100px 620px at 18% -8%, #10213a 0%, rgba(10,17,32,0) 62%),
+    radial-gradient(900px 520px at 92% 108%, #0e1c31 0%, rgba(7,12,22,0) 60%),
+    linear-gradient(180deg,#080e19,#060a12);
+}
+#canvas .bg-rect{fill:url(#dots)}
+
+/* 设备卡片 */
+.dev{cursor:grab}
+.dev:active{cursor:grabbing}
+.dev rect.body{
+  fill:url(#cardGrad);stroke-width:1.2;stroke-linejoin:round;
+  filter:url(#devShadow);
+  transition:stroke-width .12s;
+}
+.dev rect.body:hover{stroke-width:1.8}
+.dev.selected rect.body{stroke-width:2;filter:url(#selGlow)}
+.dev text.name{fill:#eef5ff;font-size:13px;font-weight:600;letter-spacing:.1px;pointer-events:none;user-select:none}
+.dev text.dev-meta{fill:#5d7796;font-size:10px;letter-spacing:.5px;pointer-events:none;user-select:none}
+.dev text.chip-tx{font-size:9px;font-weight:600;letter-spacing:.3px;pointer-events:none;user-select:none}
+.dev .port{cursor:crosshair}
+.dev .port .bar{stroke:rgba(4,10,19,.85);stroke-width:1}
+.dev .port .dot{pointer-events:none}
+.dev .port:hover .bar{stroke:#f8fafc}
+.dev .port text{
+  paint-order:stroke;stroke:#101a2b;stroke-width:3px;stroke-linejoin:round;
+  fill:#93a8c1;font-size:9.5px;pointer-events:none;user-select:none;
+}
+.dev .port:hover text{fill:#e2e8f0}
+.dev .port .halo{fill:none;stroke:var(--accent);stroke-width:2;opacity:.95}
+
+/* 关系图卡片 */
+.rel-node{cursor:pointer}
+.rel-node text{pointer-events:none;user-select:none}
+.rel-node .rel-name{fill:#eef5ff;font-size:13px;font-weight:600}
+.rel-node .rel-meta{fill:#93a8c1;font-size:10.5px}
+.rel-node:hover .rel-body{stroke-width:2;stroke-opacity:1}
+.rel-edge{fill:none;stroke-linecap:round;opacity:.8}
+
+/* 连线 */
+.edge{fill:none;stroke-linecap:round}
+.edge.phys{cursor:pointer;transition:stroke-opacity .12s}
+.edge.phys:hover{stroke:var(--danger) !important;stroke-width:3 !important}
+.edge.flow{stroke-dasharray:8 4;opacity:.95}
+.edge.sig{cursor:pointer;stroke-dasharray:8 4}
+.edge.sig:hover{stroke:var(--danger) !important}
+.edge-glow{fill:none;stroke-linecap:round;pointer-events:none}
+@media (prefers-reduced-motion: no-preference){
+  .edge.flow,.edge.sig{animation:flowDash 22s linear infinite}
+}
+@keyframes flowDash{to{stroke-dashoffset:-240}}
+.edge-hit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}
+.lbl-bg{fill:rgba(8,15,27,.92);stroke-width:1;stroke-opacity:.55}
+.lbl-tx{font-size:11px;font-weight:600;pointer-events:none;user-select:none;paint-order:stroke;stroke:#080f1b;stroke-width:3px;stroke-linejoin:round}
+
+/* ---------- 空状态 ---------- */
+#emptyHint{
+  position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);text-align:center;
+  color:var(--dim);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+#emptyHint svg{opacity:.8;margin-bottom:8px}
+#emptyHint b{display:block;font-size:17px;color:#dbe7f5;margin-bottom:4px;font-weight:600;letter-spacing:.2px}
+#emptyHint .tips{font-size:12.5px;line-height:1.9;color:var(--muted)}
+#emptyHint .keys{margin-top:14px;display:flex;gap:8px;align-items:center;pointer-events:auto}
+#emptyHint .keys .kbd{
+  font-size:11px;color:#a9bdd4;background:rgba(24,38,58,.8);border:1px solid var(--hair);
+  border-radius:6px;padding:3px 7px;
+}
+#emptyHint .keys button{
+  height:30px;padding:0 13px;border-radius:9px;border:1px solid #3ea7e2;cursor:pointer;
+  background:linear-gradient(180deg,#2d97d3,#1b6d9c);color:#f8fcff;font-size:12px;
+  box-shadow:0 4px 16px rgba(56,189,248,.3);
+}
+#emptyHint .keys button:hover{background:linear-gradient(180deg,#3aa6e2,#2180b5)}
+
+/* ---------- 浮层面板 ---------- */
+#flowPanel{
+  position:relative;flex:0 0 268px;width:268px;height:100%;overflow:auto;padding:14px 14px 18px;
+  background:linear-gradient(180deg,rgba(13,23,38,.98),rgba(8,14,26,.98));
+  border-left:1px solid var(--hair);box-shadow:-18px 0 40px rgba(0,0,0,.25);
+  z-index:6;
+}
+.fp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid var(--hair)}
+.fp-head b{font-size:12.5px;font-weight:600;letter-spacing:.2px;color:#e9f1fb}
+.fp-empty{color:var(--dim);font-size:11.5px;line-height:1.75}
+.flow-item{
+  padding:8px 9px;border-radius:10px;border:1px solid transparent;cursor:pointer;margin-bottom:6px;
+  background:rgba(19,33,51,.75);transition:background .14s,border-color .14s,transform .12s;
+}
+.flow-item:hover{background:rgba(28,46,70,.9);transform:translateY(-1px)}
+.flow-item.active{border-color:rgba(56,189,248,.55);background:rgba(18,42,61,.95);box-shadow:0 0 0 3px rgba(56,189,248,.08)}
+.flow-item .fi-name{font-size:12.5px;font-weight:600;color:#e6eef8;display:flex;align-items:center;gap:7px}
+.flow-item .fi-name i{width:8px;height:8px;border-radius:50%;flex:0 0 8px;box-shadow:0 0 8px currentColor}
+.flow-item .fi-addr{font-size:10.5px;color:var(--dim);word-break:break-all;margin-top:3px;letter-spacing:.1px}
+.flow-item .fi-meta{font-size:10.5px;color:var(--muted);margin-top:4px}
+.flow-item .brk{color:#fca5a5}
+
+#connectBar{
+  position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:9;max-width:86%;
+  display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;
+  background:rgba(10,20,34,.94);backdrop-filter:blur(14px);
+  border:1px solid rgba(56,189,248,.35);box-shadow:0 14px 40px rgba(0,0,0,.55), 0 0 0 3px rgba(56,189,248,.08);
+}
+#connectBar .hint{font-size:12px;color:#cfdcec;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#connectBar .hint b{color:var(--accent)}
+
+/* 缩放控件 */
+#zoomCtl{
+  position:absolute;left:14px;bottom:14px;z-index:7;display:flex;align-items:center;gap:2px;padding:4px;
+  background:var(--surface);backdrop-filter:blur(12px);
+  border:1px solid var(--hair);border-radius:11px;box-shadow:var(--shadow-2);
+}
+#zoomCtl button{
+  width:30px;height:28px;border:0;border-radius:8px;background:transparent;color:#b9cbe0;
+  cursor:pointer;font-size:14px;line-height:1;display:grid;place-items:center;transition:.14s;
+}
+#zoomCtl button:hover{background:rgba(148,163,184,.14);color:#fff}
+#zoomCtl .zval{width:46px;font-size:11.5px;color:var(--muted);letter-spacing:.3px}
+
+/* ---------- 状态栏 ---------- */
+#statusbar{
+  flex:0 0 30px;display:flex;align-items:center;gap:12px;padding:0 14px;
+  background:linear-gradient(180deg,#0a1322,#070d17);
+  border-top:1px solid var(--hair);color:var(--muted);font-size:11.5px;
+}
+#statusbar .stat{display:inline-flex;align-items:center;gap:6px}
+#statusbar .stat b{color:#cfdcec;font-weight:600}
+#statusbar .sep{width:1px;height:12px;background:var(--hair)}
+#statusbar .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block;box-shadow:0 0 8px rgba(52,211,153,.7)}
+#statusbar .dot.dirty{background:var(--warn);box-shadow:0 0 8px rgba(251,191,36,.7)}
+#statusbar .right{margin-left:auto;display:flex;gap:14px;align-items:center;color:var(--dim)}
+
+/* ---------- Toast ---------- */
+#toastWrap{position:fixed;right:18px;bottom:44px;display:flex;flex-direction:column;gap:8px;z-index:4000;pointer-events:none}
+.toast{
+  min-width:190px;max-width:430px;padding:10px 14px;border-radius:11px;font-size:12.5px;
+  background:rgba(18,32,50,.96);backdrop-filter:blur(12px);
+  border:1px solid var(--hair);border-left:3px solid var(--accent);color:#e8f0fa;
+  box-shadow:0 16px 40px rgba(0,0,0,.55);animation:tin .2s cubic-bezier(.2,.9,.3,1.2);
+}
+.toast.ok{border-left-color:var(--ok)}
+.toast.warn{border-left-color:var(--warn)}
+.toast.err{border-left-color:var(--danger)}
+@keyframes tin{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+
+/* ---------- 右键菜单 ---------- */
+#menu{
+  position:fixed;z-index:3000;min-width:200px;padding:6px;border-radius:12px;
+  background:rgba(14,25,41,.97);backdrop-filter:blur(16px);
+  border:1px solid var(--hair-strong);box-shadow:var(--shadow-3);
+  animation:tin .12s ease-out;
+}
+.mi{padding:8px 10px;border-radius:8px;font-size:12.5px;color:#d7e3f2;cursor:pointer;white-space:nowrap;transition:background .12s}
+.mi:hover{background:rgba(56,189,248,.14);color:#fff}
+.mi.disabled{opacity:.35;cursor:not-allowed}
+.mi.danger{color:#fca5a5}
+.mi.danger:hover{background:rgba(248,113,113,.16)}
+.mi .k{float:right;color:var(--dim);font-size:11px;margin-left:16px}
+.msep{height:1px;background:var(--hair);margin:6px 6px}
+.mtitle{padding:6px 10px 4px;font-size:11px;color:var(--dim);letter-spacing:.3px}
+
+/* ---------- 弹窗 ---------- */
+.mask{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:26px;
+  background:rgba(3,7,15,.62);backdrop-filter:blur(6px);z-index:2000;
+}
+.modal{
+  width:min(720px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(180deg,#111d30,#0d1728);
+  border:1px solid var(--hair-strong);border-radius:16px;
+  box-shadow:var(--shadow-3);
+  animation:modalIn .18s cubic-bezier(.2,.9,.3,1.1);
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+.modal.narrow{width:min(460px,94vw)}
+.modal.wide{width:min(920px,96vw)}
+.mhead{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--hair);flex:0 0 auto}
+.mhead b{font-size:14.5px;font-weight:600;letter-spacing:.2px}
+.mhead .sub{font-size:11.5px;color:var(--dim)}
+.mhead .x{
+  margin-left:auto;width:28px;height:28px;display:grid;place-items:center;
+  background:transparent;border:0;border-radius:8px;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;
+}
+.mhead .x:hover{background:rgba(248,113,113,.14);color:#fecaca}
+.mbody{padding:16px 18px;overflow:auto;flex:1 1 auto}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--hair);flex:0 0 auto;background:rgba(8,15,26,.5)}
+.mfoot .left{margin-right:auto}
+
+/* ---------- 表单与卡片 ---------- */
+.card{background:rgba(19,33,51,.7);border:1px solid var(--hair);border-radius:12px;padding:13px 14px;margin-bottom:12px}
+.card h4{margin:0 0 10px;font-size:12.5px;color:#dbe7f5;font-weight:600;display:flex;align-items:center;gap:8px}
+.card h4 .sp{margin-left:auto}
+label.inline{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+input[type=text],input[type=number],select,textarea{
+  height:30px;background:rgba(6,13,24,.75);border:1px solid var(--hair);border-radius:8px;color:var(--text);
+  padding:0 9px;outline:none;font-size:12.5px;transition:border-color .15s,box-shadow .15s;
+}
+textarea{height:auto;padding:8px 9px;resize:vertical}
+input[type=text]:hover,select:hover{border-color:var(--hair-strong)}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.13)}
+input[type=checkbox]{accent-color:#2d97d3;width:14px;height:14px}
+.row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.row .grow{flex:1 1 auto;min-width:0}
+.row .w80{width:82px;flex:0 0 82px}
+.row .w120{width:120px;flex:0 0 120px}
+.hintline{font-size:11.5px;color:var(--dim);line-height:1.75;margin:4px 0 8px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;color:var(--dim);font-weight:500;font-size:11px;padding:0 6px 6px;border-bottom:1px solid var(--hair)}
+.tbl td{padding:3px 6px 7px;vertical-align:middle}
+.tbl tr:hover td{background:rgba(56,189,248,.04)}
+.tag{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10.5px;background:rgba(148,163,184,.14);color:#a9c0da;white-space:nowrap}
+.tag.sdi{background:rgba(95,196,107,.16);color:#86e18f}
+.tag.asi{background:rgba(199,107,180,.16);color:#e6a2d6}
+.tag.ip{background:rgba(74,163,223,.16);color:#8ecbf0}
+.ghost{
+  background:transparent;border:1px dashed var(--hair-strong);color:var(--muted);border-radius:8px;
+  height:27px;padding:0 10px;cursor:pointer;font-size:12px;transition:.15s;
+}
+.ghost:hover{border-color:var(--accent);color:var(--accent);background:rgba(56,189,248,.06)}
+.mini{
+  height:25px;padding:0 9px;font-size:11.5px;border-radius:7px;border:1px solid var(--hair);
+  background:rgba(24,38,58,.8);color:#cbdaec;cursor:pointer;white-space:nowrap;transition:.15s;
+}
+.mini:hover{background:rgba(38,58,86,.95);color:#fff;border-color:var(--hair-strong)}
+.mini.danger{color:#fca5a5;border-color:rgba(248,113,113,.3);background:rgba(60,24,30,.55)}
+.mini.danger:hover{background:rgba(80,30,38,.8)}
+.list-row{
+  display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;margin-bottom:7px;
+  background:rgba(19,33,51,.72);border:1px solid transparent;transition:.15s;
+}
+.list-row:hover{border-color:var(--hair-strong);background:rgba(25,42,64,.9)}
+.list-row .nm{font-size:12.5px;font-weight:600}
+.list-row .ds{font-size:11px;color:var(--dim);margin-top:2px}
+.list-row .sp{margin-left:auto;display:flex;gap:6px}
+.mono{font-family:Consolas,"Courier New",monospace;font-size:11.5px}
+.rel-stats{font-size:11.5px;color:var(--muted);margin:9px 0 7px;line-height:1.7}
+.rel-lg{display:flex;align-items:center;gap:8px;font-size:11.5px;color:#c6d6e8;margin:5px 0}
+.rel-lg i{width:16px;height:0;border-top-width:3px;border-top-style:solid;flex:0 0 16px;border-radius:2px}
+.rel-lg i.sig{border-top-style:dashed}
+
+#bootError{
+  position:fixed;left:14px;bottom:40px;max-width:70vw;padding:10px 13px;border-radius:10px;
+  background:rgba(45,15,22,.96);border:1px solid #7f1d1d;color:#fecaca;font-size:12px;z-index:5000;white-space:pre-wrap;
+  box-shadow:var(--shadow-2);
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand">
+      <i class="logo">S</i>
+      <div class="bt"><b>SysFlow</b><span>基带 IP 信号流图</span></div>
+    </div>
+    <input id="graphName" type="text" value="未命名信号图" title="信号图名称（Ctrl+S 保存到图库）">
+    <div class="seg" id="viewSeg">
+      <button data-mode="physical" class="active">光纤连接</button>
+      <button data-mode="routing">IP 路由</button>
+      <button data-mode="relation">关系图</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn icon" id="btnUndo" title="撤销（Ctrl+Z）">↶</button>
+    <button class="btn icon" id="btnRedo" title="重做（Ctrl+Y）">↷</button>
+    <span class="vsep"></span>
+    <button class="btn" id="btnFit" title="缩放到全部设备">适应画布</button>
+    <button class="btn" id="btnTidy" title="按网格整理设备位置">整理布局</button>
+    <span class="vsep"></span>
+    <button class="btn" id="btnTpl" title="管理设备模板">设备模板</button>
+    <button class="btn" id="btnLib" title="图库：保存/打开/删除">图库</button>
+    <span class="vsep"></span>
+    <button class="btn" id="btnImport" title="导入 JSON（单张替换画布，数组整批进图库）">导入</button>
+    <button class="btn" id="btnExport" title="导出当前图为 JSON">导出</button>
+    <span class="vsep"></span>
+    <button class="btn primary" id="btnAdd">＋ 设备</button>
+    <button class="btn" id="btnSave" title="保存到浏览器图库（Ctrl+S）">保存</button>
+  </header>
+
+  <main id="stage">
+    <div id="canvasWrap">
+    <div id="canvas"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div id="emptyHint" class="hidden">
+      <svg width="126" height="78" viewBox="0 0 126 78" fill="none" aria-hidden="true">
+        <rect x="2" y="26" width="36" height="26" rx="8" fill="rgba(56,189,248,.07)" stroke="#2b4a6b" stroke-width="1.5"/>
+        <rect x="88" y="7" width="32" height="24" rx="7" fill="rgba(129,140,248,.07)" stroke="#2b4a6b" stroke-width="1.5"/>
+        <rect x="88" y="47" width="32" height="24" rx="7" fill="rgba(52,211,153,.07)" stroke="#2b4a6b" stroke-width="1.5"/>
+        <path d="M38 39 C 60 39, 64 19, 88 19" stroke="#2f5578" stroke-width="1.5"/>
+        <path d="M38 39 C 60 39, 64 59, 88 59" stroke="#2f5578" stroke-width="1.5"/>
+        <circle cx="2" cy="39" r="2.5" fill="#38bdf8"/>
+        <circle cx="38" cy="39" r="2.5" fill="#38bdf8"/>
+        <circle cx="88" cy="19" r="2.5" fill="#818cf8"/>
+        <circle cx="88" cy="59" r="2.5" fill="#34d399"/>
+      </svg>
+      <b>画布还是空的</b>
+      <div class="tips">右键画布添加设备，或点右上角「＋ 设备」<br>想先看看效果，直接载入示例</div>
+      <div class="keys"><button data-demo="1">载入示例</button><span class="kbd">Ctrl+S 保存</span></div>
+    </div>
+    <div id="connectBar" class="hidden"></div>
+    <div id="zoomCtl" title="缩放">
+      <button data-zoom="out" title="缩小">−</button>
+      <button class="zval" id="zoomVal" data-zoom="reset" title="恢复 100%">100%</button>
+      <button data-zoom="in" title="放大">＋</button>
+      <span class="vsep"></span>
+      <button data-zoom="fit" title="适应画布">⛶</button>
+    </div>
+    </div><!-- /canvasWrap -->
+    <aside id="flowPanel" class="hidden"></aside>
+  </main>
+
+  <footer id="statusbar">
+    <span class="stat" id="stDevices">设备 0</span>
+    <span class="sep"></span>
+    <span class="stat" id="stLinks">连线 0</span>
+    <span class="sep"></span>
+    <span class="stat" id="stFlows">流 0</span>
+    <div class="right">
+      <span id="stSave"><span class="dot"></span>本地已保存</span>
+      <span id="stMode">光纤连接视图</span>
+      <span id="stZoom">100%</span>
+    </div>
+  </footer>
+
+  <div id="toastWrap"></div>
+  <div id="menu" class="hidden"></div>
+  <input id="fileInput" type="file" accept=".json,application/json" class="hidden">
+  <input id="tplInput" type="file" accept=".json,application/json" class="hidden">
+  <div id="bootError" class="hidden"></div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* 全局错误兜底：单文件应用没有服务端日志，出错时在左下角显示，便于用户反馈 */
+window.addEventListener('error', function (ev) {
+  var box = document.getElementById('bootError');
+  if (!box) return;
+  box.classList.remove('hidden');
+  box.textContent = '脚本错误：' + (ev.message || ev.error);
+});
+
+/* ============================================================================
+ * SysFlow · 单文件版（零依赖 / 双击即用 / localStorage 存储）
+ * ----------------------------------------------------------------------------
+ * 架构（与 docs/visualization-method.md 同一套口径）：
+ *   ① 本体 SignalGraph（devices + links）是唯一事实源，不含坐标
+ *   ② 坐标在 Layout 里，只由拖拽/整理布局写入
+ *   ③ 画布每次整体重算：派生（组播镜像/流追踪）→ 拼 SVG 字符串 → innerHTML
+ *   ④ 所有破坏性操作前 snapshot()，撤销/重做只回灌本体+坐标
+ *   ⑤ 没有任何网络请求；所有数据存 localStorage，可导出/导入 JSON
+ *
+ * 数据不变式（来自 AGENTS.md，改代码前默读）：
+ *   1 本体/视图分离，坐标只进 layout
+ *   2 接收组播是派生数据：源口改址全局跟随，源口停发清理孤儿接收条目
+ *   3 一个组播地址一个发送端（编辑路径前置校验）
+ *   4 删除设备/改设备末尾也要走停发清理
+ *   5 B 口（1B/2B…）是同号 A 口的镜像，组播只读，不作流源
+ *   6 信号连线（kind=signal）只在 IP 路由视图渲染，建立时写目标口 multicast_in
+ *   7 追踪：下一跳只走 from 侧物理连线或承载该流的信号连线
+ *   8 三端 schema 收敛为单文件内一套（docs/schema.md 保留为规范文档）
+ *   9 AI 操作协议随 AI 面板一起移除
+ *  10 换图清空撤销/重做与选流状态
+ * ========================================================================= */
+
+/* ------------------------------ 常量 ------------------------------ */
+var LS_CUR   = 'sf.current.v1';    // 正在编辑的文档（自动保存，刷新不丢）
+var LS_LIB   = 'sf.library.v1';    // 图库：多份文档
+var LS_TPL   = 'sf.templates.v1';  // 设备模板
+var LS_UI    = 'sf.ui.v1';         // 界面偏好（视图模式）
+var LAYOUT_V = 1;
+
+var NODE_PAD = 10;      // 设备卡片内边距
+var NAME_H  = 20;       // 设备名称占位高度
+var PORT_ROW = 20;      // 端口行距
+var SPARSE_ROW = 5;     // 「端口间距放大」倍数
+var NODE_MIN_W = 130;   // 设备卡片最小宽度
+var NODE_MAX_W = 300;
+var UNDO_CAP = 30;
+
+var SIGNAL_COLORS = { ip: '#4aa3df', sdi: '#5fc46b', asi: '#c76bb4' };
+var PORT_COLORS   = { ip_port: '#6dd5fa', sdi_port: '#a8ff78', asi_port: '#ec38bc' };
+var PORT_TYPES    = ['ip_port', 'sdi_port', 'asi_port'];
+var FORWARDERS    = { 'Net-Switch': 1, Ni: 1, OTN: 1 };   // 转发类设备：不作流源
+
+/* ------------------------------ 工具 ------------------------------ */
+function uid(prefix) {
+  return (prefix || 'id') + '_' + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 7);
+}
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+function deep(o) { return JSON.parse(JSON.stringify(o)); }
+function num(v, d) { var n = Number(v); return isFinite(n) ? n : d; }
+function isBidi(port) { return !!port && (port.type === 'ip_port' || port.bidirectional === true); }
+function isMirror(port) { return !!port && /B$/.test(String(port.number || '')); }
+function signalTypeOf(portType) { return String(portType || 'ip_port').replace('_port', ''); }
+
+/* ------------------------------ 状态 ------------------------------ */
+var S = {
+  doc: null,                 // { id, name, graph, layout }
+  dirty: false,
+  undo: [],
+  redo: [],
+  templates: [],
+  library: [],               // [{id,name,updatedAt,graph,layout}]
+  view: {
+    mode: 'physical',
+    cam: { x: 0, y: 0, zoom: 1 },
+    selectedFlow: '',
+    selectedDevice: '',
+    picking: null,           // {deviceId,portId} 等待选流
+    armed: null,             // {deviceId,portId,address,name} 已选流等待点目标口
+    hoverDevice: ''
+  },
+  drag: null,                // 拖拽会话（节点/平移/连线）
+  modalStack: []
+};
+
+/* ------------------------------ 存储 ------------------------------ */
+function lsGet(key, fallback) {
+  try {
+    var raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch (e) { return fallback; }
+}
+function lsSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+  catch (e) { toast('本地存储写入失败（可能空间已满）', 'err'); return false; }
+}
+
+function emptyGraph() { return { version: 2, name: '', devices: [], links: [] }; }
+function emptyLayout() { return { version: LAYOUT_V, nodes: {}, viewport: { x: 0, y: 0, zoom: 1 } }; }
+function emptyDoc(name) {
+  return { id: null, name: name || '未命名信号图', graph: emptyGraph(), layout: emptyLayout() };
+}
+
+/* 种子模板（与旧后端 seed.py 一致：SDI 信号源 / IP 交换机 / 监视器） */
+function seedTemplates() {
+  function p(number, type, direction, bidirectional) {
+    return { number: number, type: type, direction: direction, bidirectional: !!bidirectional, program: '' };
+  }
+  // 交换机 16 口全部双向；方向只决定画在卡片哪一侧（左右各 8 口，连线才不会绕卡片）
+  var ports = [];
+  for (var i = 1; i <= 16; i++) ports.push(p(String(i), 'ip_port', i <= 8 ? 'in' : 'out', true));
+  return [
+    { id: uid('tpl'), type: 'SDI-Source', name: 'SDI信号源', description: '输出 SDI 信号', ports: [p('1', 'sdi_port', 'out')], inner_links: [] },
+    { id: uid('tpl'), type: 'Net-Switch', name: 'IP交换机', description: '16 口 IP 交换机，端口双向收发（1-8 口在左、9-16 口在右）', ports: ports, inner_links: [] },
+    {
+      id: uid('tpl'), type: 'Monitor', name: '监视器', description: 'SDI / ASI / IP 信号监视',
+      ports: [p('1', 'sdi_port', 'in'), p('2', 'asi_port', 'in'), p('3', 'ip_port', 'in', true)], inner_links: []
+    }
+  ];
+}
+
+/* ------------------------------ 查找 ------------------------------ */
+function graph() { return S.doc.graph; }
+function devices() { return S.doc.graph.devices; }
+function links() { return S.doc.graph.links; }
+
+function deviceById(id) {
+  var ds = devices();
+  for (var i = 0; i < ds.length; i++) if (ds[i].id === id) return ds[i];
+  return null;
+}
+function portByRef(devId, portId) {
+  var d = deviceById(devId);
+  if (!d) return null;
+  for (var i = 0; i < d.ports.length; i++) if (d.ports[i].id === portId) return { device: d, port: d.ports[i] };
+  return null;
+}
+function linkById(id) {
+  var ls = links();
+  for (var i = 0; i < ls.length; i++) if (ls[i].id === id) return ls[i];
+  return null;
+}
+function physicalLinks() { return links().filter(function (l) { return l.kind !== 'signal'; }); }
+
+/* ------------------------------ 连线规则（与旧后端 validate.py 同一套） ------------------------------ */
+function checkLink(from, to) {
+  if (!from || !to) return ['端口引用不完整'];
+  if (from.device === to.device) return ['不允许设备自连'];
+  var fp = portByRef(from.device, from.port);
+  var tp = portByRef(to.device, to.port);
+  if (!fp) return ['起点端口不存在'];
+  if (!tp) return ['落点端口不存在'];
+  var errors = [];
+  if (fp.port.type !== tp.port.type) errors.push('端口类型不匹配：' + fp.port.type + ' → ' + tp.port.type);
+  if (!(fp.port.direction === 'out' || isBidi(fp.port))) errors.push('起点必须为输出口或双向口');
+  if (!(tp.port.direction === 'in' || isBidi(tp.port))) errors.push('落点必须为输入口或双向口');
+  return errors;
+}
+function sameEnd(devId, portId, l) {
+  return (l.from.device === devId && l.from.port === portId) ||
+         (l.to.device === devId && l.to.port === portId);
+}
+
+/* 图内唯一设备名：末尾数字递增（Node1 → Node2…），无数字从 2 开始 */
+function uniqueName(base) {
+  var fallback = base || '未命名设备';
+  var names = {};
+  devices().forEach(function (d) { names[d.name] = 1; });
+  var m = fallback.match(/^(.*?)(\d+)$/);
+  var prefix = m ? m[1] : fallback;
+  var n = m ? parseInt(m[2], 10) : 1;
+  var candidate = fallback;
+  while (names[candidate]) { n += 1; candidate = prefix + n; }
+  return candidate;
+}
+
+/* 新设备落点：找第一个没被占用的网格位（不写进 layout，仅返回坐标） */
+function autoPosition() {
+  var occupied = {};
+  var nodes = S.doc.layout.nodes;
+  Object.keys(nodes).forEach(function (id) {
+    occupied[Math.round(nodes[id].x / 300) + ':' + Math.round(nodes[id].y / 250)] = 1;
+  });
+  for (var i = 0; i < 400; i++) {
+    var x = 60 + (i % 5) * 300;
+    var y = 60 + Math.floor(i / 5) * 250;
+    if (!occupied[Math.round(x / 300) + ':' + Math.round(y / 250)]) return { x: x, y: y };
+  }
+  return { x: 60, y: 60 };
+}
+
+/* ============================================================================
+ * 派生数据（全部幂等，可在任何写操作末尾安全重复执行）
+ * ========================================================================= */
+
+/* B 口组播镜像：1B/2B… 永远等于同号 A 口；无同号 A 口则清空 */
+function mirrorBPortsIn(g) {
+  g.devices.forEach(function (d) {
+    var byNumber = {};
+    d.ports.forEach(function (p) { byNumber[p.number] = p; });
+    d.ports.forEach(function (p) {
+      var m = String(p.number || '').match(/^(.*)B$/);
+      if (!m) return;
+      var a = byNumber[m[1] + 'A'];
+      var clone = function (list) { return (list || []).map(function (e) { return { id: uid('mc'), address: e.address, name: e.name }; }); };
+      p.multicast_in = a ? clone(a.multicast_in) : [];
+      p.multicast_out = a ? clone(a.multicast_out) : [];
+    });
+  });
+}
+function mirrorBPorts() { mirrorBPortsIn(S.doc.graph); }
+
+/* 发送条目改址：信号连线 stream 与全图接收条目按条目 id 跟随 */
+function followRenames(port, prevOuts) {
+  (prevOuts || []).forEach(function (prev) {
+    if (!prev.address) return;
+    var cur = null;
+    for (var i = 0; i < port.multicast_out.length; i++) {
+      if (port.multicast_out[i].id && port.multicast_out[i].id === prev.id) { cur = port.multicast_out[i]; break; }
+    }
+    if (!cur || cur.address === prev.address) return;
+    links().forEach(function (l) { if (l.stream === prev.address) l.stream = cur.address; });
+    devices().forEach(function (d) {
+      d.ports.forEach(function (p) {
+        (p.multicast_in || []).forEach(function (m) {
+          if (m.address === prev.address) { m.address = cur.address; m.name = cur.name; }
+        });
+      });
+    });
+  });
+}
+
+/* 失效信号连线：源口不再发该流、或目标口不再收该流 → 删除 */
+function pruneSignalLinks() {
+  S.doc.graph.links = links().filter(function (l) {
+    if (l.kind !== 'signal') return true;
+    var src = portByRef(l.from.device, l.from.port);
+    var dst = portByRef(l.to.device, l.to.port);
+    if (!src || !dst) return false;
+    var sends = src.port.multicast_out.some(function (m) { return m.address === l.stream; });
+    var recvs = dst.port.multicast_in.some(function (m) { return m.address === l.stream; });
+    return sends && recvs;
+  });
+}
+
+/* 孤儿接收条目：没有任何发送端的地址 → 从所有接收口移除 */
+function cleanOrphanReceivers() {
+  var sent = {};
+  devices().forEach(function (d) {
+    d.ports.forEach(function (p) {
+      (p.multicast_out || []).forEach(function (m) { if (m.address) sent[m.address] = 1; });
+    });
+  });
+  devices().forEach(function (d) {
+    d.ports.forEach(function (p) {
+      p.multicast_in = (p.multicast_in || []).filter(function (m) { return !!sent[m.address]; });
+    });
+  });
+  pruneSignalLinks();
+}
+
+/* 组播编辑后的全局同步（画布双击端口路径立即调用；设备编辑抽屉路径延迟到写回后） */
+function syncMulticastAfterEdit(port, prevOuts) {
+  followRenames(port, prevOuts);
+  cleanOrphanReceivers();
+  mirrorBPorts();
+}
+
+/* ------------------------------ 组播流追踪 ------------------------------ */
+function portHasFlow(port, address, dir) {
+  var list = dir === 'in' ? (port.multicast_in || []) : (port.multicast_out || []);
+  return list.some(function (m) { return m.address === address; });
+}
+function findExitPort(device, inPort, address) {
+  var i, k;
+  for (i = 0; i < (device.inner_links || []).length; i++) {
+    var il = device.inner_links[i];
+    if (il.from_port !== inPort.number) continue;
+    for (k = 0; k < device.ports.length; k++) {
+      var out = device.ports[k];
+      if (out.number === il.to_port && out.id !== inPort.id && !isMirror(out) && portHasFlow(out, address, 'out')) return out;
+    }
+  }
+  for (k = 0; k < device.ports.length; k++) {
+    var p = device.ports[k];
+    if (p.id !== inPort.id && !isMirror(p) && portHasFlow(p, address, 'out')) return p;
+  }
+  return null;
+}
+function linkFromPort(deviceId, portId, address) {
+  var ls = links();
+  for (var i = 0; i < ls.length; i++) {
+    var l = ls[i];
+    if (l.from.device !== deviceId || l.from.port !== portId) continue;
+    if (l.kind !== 'signal' || l.stream === address) return l;
+  }
+  return null;
+}
+/** 返回 [{address,name,paths:[{originDeviceId,originPortId,broken,brokenAt,linkIds,hops}]}] */
+function traceSignals() {
+  var byAddr = {}, addresses = {};
+  devices().forEach(function (d) {
+    d.ports.forEach(function (p) {
+      (p.multicast_out || []).forEach(function (m) {
+        if (!m.address) return;
+        addresses[m.address] = 1;
+        if (m.name && !byAddr[m.address]) byAddr[m.address] = m.name;
+      });
+    });
+  });
+
+  return Object.keys(addresses).map(function (address) {
+    var flow = { address: address, name: byAddr[address] || address, paths: [] };
+    var origins = [];
+    devices().forEach(function (d) {
+      if (FORWARDERS[d.type]) return;
+      d.ports.forEach(function (p) {
+        if (isMirror(p)) return;
+        if (portHasFlow(p, address, 'out')) origins.push({ device: d, port: p });
+      });
+    });
+
+    origins.forEach(function (origin) {
+      var hops = [{
+        deviceId: origin.device.id, deviceName: origin.device.name,
+        inPortId: null, outPortId: origin.port.id, outNumber: origin.port.number
+      }];
+      var linkIds = [], visited = {}, broken = false, brokenAt = '';
+      visited[origin.device.id + ':' + origin.port.id] = 1;
+      var curDevice = origin.device, curPort = origin.port;
+
+      for (var step = 0; step < 64; step++) {
+        var l = linkFromPort(curDevice.id, curPort.id, address);
+        if (!l) {
+          broken = true;
+          brokenAt = curDevice.name + ' 口' + curPort.number + ' 未连接线';
+          break;
+        }
+        var nextDevice = deviceById(l.to.device);
+        var nextFound = nextDevice ? portByRef(l.to.device, l.to.port) : null;
+        var nextPort = nextFound ? nextFound.port : null;
+        if (!nextDevice || !nextPort) {
+          broken = true; brokenAt = '连线 ' + l.id + ' 指向不存在的端口'; break;
+        }
+        var key = nextDevice.id + ':' + nextPort.id;
+        if (visited[key]) break;                 // 环：停止
+        visited[key] = 1;
+
+        if (!portHasFlow(nextPort, address, 'in')) {
+          broken = true;
+          brokenAt = nextDevice.name + ' 口' + nextPort.number + ' 未配置接收 ' + address;
+          hops.push({
+            deviceId: nextDevice.id, deviceName: nextDevice.name,
+            inPortId: nextPort.id, inNumber: nextPort.number, outPortId: null, viaLinkId: l.id
+          });
+          break;
+        }
+        linkIds.push(l.id);                      // 校验通过才计入渲染路径（断路段不画）
+
+        var exit = findExitPort(nextDevice, nextPort, address);
+        hops.push({
+          deviceId: nextDevice.id, deviceName: nextDevice.name,
+          inPortId: nextPort.id, inNumber: nextPort.number,
+          outPortId: exit ? exit.id : null, outNumber: exit ? exit.number : '', viaLinkId: l.id
+        });
+        if (!exit) break;                        // 终点（如监视器）
+        curDevice = nextDevice; curPort = exit;
+      }
+
+      flow.paths.push({
+        originDeviceId: origin.device.id, originPortId: origin.port.id,
+        broken: broken, brokenAt: brokenAt, linkIds: linkIds, hops: hops
+      });
+    });
+    return flow;
+  });
+}
+
+/* 地址 → 稳定色（FNV-1a 强混合，相邻地址也散开） */
+function flowColor(address) {
+  var hash = 0x811c9dc5;
+  address = String(address || '');
+  for (var i = 0; i < address.length; i++) {
+    hash ^= address.charCodeAt(i);
+    hash = (hash * 0x01000193) >>> 0;
+  }
+  return 'hsl(' + (hash % 360) + ',85%,62%)';
+}
+
+/* 全量流（追踪结果 + 仅存在于信号连线的流） */
+function allFlows() {
+  var traced = traceSignals();
+  var map = {};
+  traced.forEach(function (f) { map[f.address] = f; });
+  links().forEach(function (l) {
+    if (l.kind !== 'signal' || !l.stream || map[l.stream]) return;
+    var src = portByRef(l.from.device, l.from.port);
+    var entry = src ? (src.port.multicast_out || []).filter(function (m) { return m.address === l.stream; })[0] : null;
+    map[l.stream] = { address: l.stream, name: (entry && entry.name) || l.stream, paths: [] };
+  });
+  return Object.keys(map).map(function (k) { return map[k]; });
+}
+
+/* ============================================================================
+ * 写操作（唯一入口）—— 每个动作：校验 → 改本体 → snapshot/派生 → afterChange
+ * ========================================================================= */
+function snapshot() {
+  S.undo.push({ graph: deep(S.doc.graph), layout: deep(S.doc.layout), name: S.doc.name });
+  if (S.undo.length > UNDO_CAP) S.undo.shift();
+  S.redo = [];                                  // 新操作分叉，重做作废
+}
+function undo() {
+  var last = S.undo.pop();
+  if (!last) return false;
+  S.redo.push({ graph: deep(S.doc.graph), layout: deep(S.doc.layout), name: S.doc.name });
+  S.doc.graph = last.graph;
+  S.doc.layout = last.layout;
+  S.doc.name = last.name;
+  $('graphName').value = last.name;
+  afterChange();
+  return true;
+}
+function redo() {
+  var next = S.redo.pop();
+  if (!next) return false;
+  S.undo.push({ graph: deep(S.doc.graph), layout: deep(S.doc.layout), name: S.doc.name });
+  S.doc.graph = next.graph;
+  S.doc.layout = next.layout;
+  S.doc.name = next.name;
+  $('graphName').value = next.name;
+  afterChange();
+  return true;
+}
+
+function addDevice(tpl, pos, name) {
+  if (!tpl) return null;
+  snapshot();
+  var device = {
+    id: uid('dev'),
+    name: uniqueName(name || tpl.name),
+    type: tpl.type,
+    ports: (tpl.ports || []).map(function (p) {
+      return {
+        id: uid('p'), number: p.number, type: p.type, direction: p.direction,
+        bidirectional: isBidi(p), program: p.program || '',
+        multicast_in: [], multicast_out: []
+      };
+    }),
+    inner_links: (tpl.inner_links || []).map(function (l) { return { from_port: l.from_port, to_port: l.to_port }; }),
+    sparse_ports: false
+  };
+  devices().push(device);
+  S.doc.layout.nodes[device.id] = pos || autoPosition();
+  afterChange();
+  return device;
+}
+
+function removeDevice(id) {
+  var d = deviceById(id);
+  if (!d) return;
+  snapshot();
+  S.doc.graph.devices = devices().filter(function (x) { return x.id !== id; });
+  S.doc.graph.links = links().filter(function (l) { return l.from.device !== id && l.to.device !== id; });
+  delete S.doc.layout.nodes[id];
+  if (S.view.selectedDevice === id) S.view.selectedDevice = '';
+  cleanOrphanReceivers();                      // 设备删除 = 其全部发送端停发
+  mirrorBPorts();
+  afterChange();
+}
+
+/** 设备编辑保存：替换本体 + 组播改址跟随 + 清理失效连线 + B 口镜像 */
+function updateDevice(id, next) {
+  var idx = -1;
+  devices().forEach(function (d, i) { if (d.id === id) idx = i; });
+  if (idx < 0) return;
+  snapshot();
+  var prev = devices()[idx];
+  var renames = [];
+  prev.ports.forEach(function (pp) {
+    var np = null;
+    for (var i = 0; i < next.ports.length; i++) if (next.ports[i].id === pp.id) { np = next.ports[i]; break; }
+    if (!np) return;                            // 端口被删：其发送的流交给孤儿清理
+    if (JSON.stringify(np.multicast_out || []) !== JSON.stringify(pp.multicast_out || [])) {
+      renames.push({ port: np, prevOuts: deep(pp.multicast_out || []) });
+    }
+  });
+  next.id = id;
+  S.doc.graph.devices[idx] = next;
+  renames.forEach(function (r) { followRenames(r.port, r.prevOuts); });
+  S.doc.graph.links = links().filter(function (l) {
+    return l.kind === 'signal' || checkLink(l.from, l.to).length === 0;
+  });
+  cleanOrphanReceivers();
+  mirrorBPorts();
+  afterChange();
+}
+
+/** 物理连线：校验 + 1口1线顶替（只顶替物理连线，不动信号连线） */
+function connect(from, to) {
+  var errors = checkLink(from, to);
+  if (errors.length) { toast(errors.join('；'), 'warn'); return false; }
+  snapshot();
+  var fp = portByRef(from.device, from.port);
+  S.doc.graph.links = links().filter(function (l) {
+    return l.kind === 'signal' || (!sameEnd(from.device, from.port, l) && !sameEnd(to.device, to.port, l));
+  });
+  links().push({
+    id: uid('link'), signal_type: signalTypeOf(fp.port.type),
+    from: { device: from.device, port: from.port },
+    to: { device: to.device, port: to.port }
+  });
+  afterChange();
+  return true;
+}
+
+
+function deletePhysicalLink(linkId) {
+  var l = linkById(linkId);
+  if (!l) return;
+  var src = portByRef(l.from.device, l.from.port);
+  var dst = portByRef(l.to.device, l.to.port);
+  var desc = (src && dst)
+    ? (src.device.name + ': ' + src.port.number + ' — ' + dst.device.name + ': ' + dst.port.number)
+    : linkId;
+  confirmDialog('删除连线', '确定删除这条连线？<br><span class="mono">' + esc(desc) + '</span>', function () {
+    snapshot();
+    S.doc.graph.links = links().filter(function (x) { return x.id !== linkId; });
+    afterChange();
+    toast('已删除连线', 'ok');
+  }, '删除');
+}
+
+/* ---- 信号连线（IP 路由视图） ---- */
+function startPicking(deviceId, portId) { S.view.picking = { deviceId: deviceId, portId: portId }; S.view.armed = null; renderChrome(); }
+function cancelPicking() { S.view.picking = null; S.view.armed = null; renderChrome(); }
+function selectStream(entry) {
+  if (!S.view.picking) return;
+  S.view.armed = {
+    deviceId: S.view.picking.deviceId, portId: S.view.picking.portId,
+    address: entry.address, name: entry.name || entry.address
+  };
+  S.view.picking = null;
+  renderChrome();
+}
+function disarm() { S.view.picking = null; S.view.armed = null; renderChrome(); }
+
+/** 路由视图：点击 IP 口 —— 已选流则完成连接；未选流且该口有输出组播则弹出选流 */
+function handlePortClick(deviceId, portId) {
+  if (S.view.mode !== 'routing') return;
+  var found = portByRef(deviceId, portId);
+  if (!found || found.port.type !== 'ip_port' || !isBidi(found.port)) return;
+  if (S.view.armed) { connectSignal(deviceId, portId); return; }
+  if (!(found.port.multicast_out || []).length) return;
+  startPicking(deviceId, portId);
+}
+
+function connectSignal(targetDeviceId, targetPortId) {
+  var armed = S.view.armed;
+  if (!armed) { toast('请先在源端口选择一路输出组播', 'warn'); return false; }
+  if (armed.deviceId === targetDeviceId && armed.portId === targetPortId) { disarm(); return true; }
+  if (armed.deviceId === targetDeviceId) { toast('不能连接同一设备', 'warn'); return false; }
+  var target = portByRef(targetDeviceId, targetPortId);
+  if (!target) { toast('目标端口不存在', 'warn'); return false; }
+  if (target.port.type !== 'ip_port' || !isBidi(target.port)) { toast('目标必须是 IP 端口', 'warn'); return false; }
+
+  var exists = links().some(function (l) {
+    return l.kind === 'signal' && l.stream === armed.address &&
+      l.from.device === armed.deviceId && l.from.port === armed.portId &&
+      l.to.device === targetDeviceId && l.to.port === targetPortId;
+  });
+  if (!exists) {
+    snapshot();
+    // 目标口自动生成接收组播（派生数据，同地址只留一条）
+    if (!(target.port.multicast_in || []).some(function (m) { return m.address === armed.address; })) {
+      target.port.multicast_in = target.port.multicast_in || [];
+      target.port.multicast_in.push({ id: uid('mc'), address: armed.address, name: armed.name });
+    }
+    links().push({
+      id: uid('link'), signal_type: 'ip', kind: 'signal', stream: armed.address,
+      from: { device: armed.deviceId, port: armed.portId },
+      to: { device: targetDeviceId, port: targetPortId }
+    });
+    mirrorBPorts();
+    afterChange();
+  }
+  disarm();
+  return true;
+}
+
+/** 路由视图拖线：源口带输出组播即转为信号连线 */
+function connectSignalByDrag(from, to) {
+  var src = portByRef(from.device, from.port);
+  if (!src || src.port.type !== 'ip_port') { toast('IP 路由视图下仅支持 IP 口之间的信号连线', 'warn'); return false; }
+  var outs = src.port.multicast_out || [];
+  if (!outs.length) { toast('该端口没有输出组播（双击端口可配置），无法建立信号连线', 'warn'); return false; }
+  var entry = null;
+  if (S.view.armed && S.view.armed.deviceId === from.device && S.view.armed.portId === from.port) {
+    entry = outs.filter(function (m) { return m.address === S.view.armed.address; })[0] || null;
+  }
+  if (!entry && outs.length === 1) entry = outs[0];
+  if (!entry) { toast('该端口有多路输出组播，请先单击端口选择一路流', 'warn'); return false; }
+  S.view.armed = { deviceId: from.device, portId: from.port, address: entry.address, name: entry.name || entry.address };
+  return connectSignal(to.device, to.port);
+}
+
+function deleteSignalLink(sigLinkId) {
+  var l = linkById(sigLinkId);
+  if (!l || l.kind !== 'signal') return;
+  var dst = portByRef(l.to.device, l.to.port);
+  var dstName = dst ? dst.device.name + ' 口' + dst.port.number : '目标口';
+  confirmDialog('删除信号连线',
+    '删除该信号连线？将同时移除 ' + esc(dstName) + ' 上对这条流的接收组播（源口输出配置不受影响）。',
+    function () {
+      snapshot();
+      if (dst) dst.port.multicast_in = (dst.port.multicast_in || []).filter(function (m) { return m.address !== l.stream; });
+      S.doc.graph.links = links().filter(function (x) { return x.id !== sigLinkId; });
+      mirrorBPorts();
+      afterChange();
+      toast('已删除信号连线', 'ok');
+    }, '删除');
+}
+
+/** 端口组播写回（校验：列表内不重复 + 不与其他端口冲突；B 口只读） */
+function applyPortMulticast(port, nextOuts, live) {
+  if (isMirror(port)) return false;
+  var cleaned = nextOuts.filter(function (e) { return String(e.address || '').trim() || String(e.name || '').trim(); })
+    .map(function (e) { return { id: e.id || uid('mc'), address: String(e.address || '').trim(), name: String(e.name || '').trim() }; });
+  var addrs = cleaned.map(function (e) { return e.address; }).filter(Boolean);
+  if (addrs.length !== Object.keys(addrs.reduce(function (o, a) { o[a] = 1; return o; }, {})).length) {
+    toast('同一端口的发送地址不能重复', 'warn');
+    return false;
+  }
+  var others = {};
+  devices().forEach(function (d) {
+    d.ports.forEach(function (p) {
+      if (p.id === port.id || isMirror(p)) return;          // B 口是 A 口拷贝，不算独立发送端
+      (p.multicast_out || []).forEach(function (m) { if (m.address) others[m.address] = 1; });
+    });
+  });
+  for (var i = 0; i < addrs.length; i++) {
+    if (others[addrs[i]]) { toast('该地址已被其他端口占用（一个地址只能有一个发送端）', 'warn'); return false; }
+  }
+  var prevOuts = deep(port.multicast_out || []);
+  if (live) snapshot();                           // 快照必须在写入之前
+  port.multicast_out = cleaned;
+  if (live) {
+    syncMulticastAfterEdit(port, prevOuts);
+    afterChange();
+  }
+  return true;
+}
+
+/* ============================================================================
+ * 变更收尾：脏标记 + 自动保存 + 重绘
+ * ========================================================================= */
+var saveTimer = null;
+function afterChange() {
+  S.dirty = true;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () { persistCurrent(); }, 350);
+  renderAll();
+}
+function persistCurrent() {
+  lsSet(LS_CUR, { doc: S.doc, mode: S.view.mode });
+  S.dirty = false;
+  renderStatus();
+}
+function markSaved() { S.dirty = false; renderStatus(); }
+
+/* ============================================================================
+ * DOM 与相机
+ * ========================================================================= */
+function $(id) { return document.getElementById(id); }
+
+function canvasSize() {
+  var r = $('canvas').getBoundingClientRect();
+  return { w: Math.max(1, r.width), h: Math.max(1, r.height), rect: r };
+}
+/** 屏幕坐标 → 世界坐标（唯一换算：除以 zoom，不做 devicePixelRatio 之类的二次换算） */
+function worldFromScreen(clientX, clientY) {
+  var s = canvasSize(), cam = S.view.cam;
+  return { x: cam.x + (clientX - s.rect.left) / cam.zoom, y: cam.y + (clientY - s.rect.top) / cam.zoom };
+}
+function zoomAt(clientX, clientY, factor) {
+  var cam = S.view.cam;
+  var before = worldFromScreen(clientX, clientY);
+  cam.zoom = clamp(cam.zoom * factor, 0.2, 3);
+  cam.x = before.x - (clientX - canvasSize().rect.left) / cam.zoom;
+  cam.y = before.y - (clientY - canvasSize().rect.top) / cam.zoom;
+  renderAll();
+}
+/** 以视口中心缩放（工具栏/浮动缩放条用） */
+function zoomAtCenter(factor) {
+  var s = canvasSize();
+  zoomAt(s.rect.left + s.w / 2, s.rect.top + s.h / 2, factor);
+}
+/** 回到指定倍率（保持视口中心不动） */
+function setZoom(z) {
+  var s = canvasSize(), cam = S.view.cam;
+  var cx = s.rect.left + s.w / 2, cy = s.rect.top + s.h / 2;
+  var w = worldFromScreen(cx, cy);
+  cam.zoom = clamp(z, 0.2, 3);
+  cam.x = w.x - (cx - s.rect.left) / cam.zoom;
+  cam.y = w.y - (cy - s.rect.top) / cam.zoom;
+  renderAll();
+}
+
+/* ============================================================================
+ * 设备几何：卡片尺寸、端口绝对坐标
+ * 端口公式与旧前端 layout.ts 一致：
+ *   body = max(左口数, 右口数) * 行距 * 间距倍数
+ *   portY = 10 + 20 + body/(该侧口数+1) * (i+1)
+ * ========================================================================= */
+function nodeWidth(dev) {
+  var n = String(dev.name || '').length;
+  // 比旧版宽一些：右上角有类型徽标，名称需要剩余空间
+  return clamp(108 + n * 14, 150, 320);
+}
+function portSpacing(dev) { return dev.sparse_ports === true ? SPARSE_ROW : 1; }
+
+function nodeGeom(dev) {
+  var nodes = S.doc.layout.nodes;
+  if (!nodes[dev.id]) nodes[dev.id] = autoPosition();
+  var pos = nodes[dev.id];
+  var left = [], right = [];
+  dev.ports.forEach(function (p) { (p.direction === 'in' ? left : right).push(p); });
+  var body = Math.max(left.length, right.length) * PORT_ROW * portSpacing(dev);
+  var w = nodeWidth(dev);
+  var h = NODE_PAD * 2 + NAME_H + body;
+  function place(list, side) {
+    var n = list.length;
+    return list.map(function (p, i) {
+      var top = NODE_PAD + NAME_H + (body / (n + 1)) * (i + 1);
+      return { port: p, side: side, y: pos.y + top };
+    });
+  }
+  return {
+    x: pos.x, y: pos.y, w: w, h: h, pos: pos,
+    left: place(left, -1), right: place(right, 1)
+  };
+}
+
+/** 端口 → 绝对坐标 + 出线方向（-1 左 / +1 右） */
+function portPoint(ref) {
+  var d = deviceById(ref.device);
+  if (!d) return null;
+  var g = nodeGeom(d);
+  var list = g.left.concat(g.right);
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].port.id === ref.port) {
+      return {
+        x: list[i].side < 0 ? g.x : g.x + g.w,
+        y: list[i].y,
+        side: list[i].side,
+        port: list[i].port,
+        device: d
+      };
+    }
+  }
+  return null;
+}
+function portPointById(devId, portId) { return portPoint({ device: devId, port: portId }); }
+
+/* ============================================================================
+ * 连线几何：端口到端口的水平三次贝塞尔
+ * - 控制点只横向偏移（端口都在左右两侧），保证线从端口"长出"而不是斜插
+ * - 同端口多线：控制点沿垂直法线错开，两端仍精确落在端口上（扇形/汇聚）
+ * ========================================================================= */
+var FAN_SPACING = 18;
+var CTRL_SCALE = 4 / 3;
+
+function bezierOf(s, t, fromOff, toOff) {
+  var dx = t.x - s.x, dy = t.y - s.y;
+  var px = -dy, py = dx;
+  if (dx < 0 || (dx === 0 && dy < 0)) { px = -px; py = -py; }
+  var len = Math.sqrt(px * px + py * py) || 1;
+  px /= len; py /= len;
+  var dist = Math.sqrt(dx * dx + dy * dy);
+  var curv = Math.max(dist * 0.25, 40);
+  var c1 = { x: s.x + s.side * curv + px * (fromOff || 0) * CTRL_SCALE, y: s.y + py * (fromOff || 0) * CTRL_SCALE };
+  var c2 = { x: t.x + t.side * curv + px * (toOff || 0) * CTRL_SCALE, y: t.y + py * (toOff || 0) * CTRL_SCALE };
+  return {
+    d: 'M ' + s.x.toFixed(1) + ',' + s.y.toFixed(1) +
+       ' C ' + c1.x.toFixed(1) + ',' + c1.y.toFixed(1) +
+       ' ' + c2.x.toFixed(1) + ',' + c2.y.toFixed(1) +
+       ' ' + t.x.toFixed(1) + ',' + t.y.toFixed(1),
+    mid: {
+      x: (s.x + 3 * c1.x + 3 * c2.x + t.x) / 8,
+      y: (s.y + 3 * c1.y + 3 * c2.y + t.y) / 8
+    },
+    px: px, py: py
+  };
+}
+
+/** 路由视图：同一端口挂多条流时按对端设备纵向顺序分配槽位 */
+function applyFanOffsets(segs) {
+  var groups = {};
+  segs.forEach(function (seg) {
+    ['from', 'to'].forEach(function (endKey) {
+      var ref = seg[endKey];
+      var key = ref.device + ':' + ref.port;
+      (groups[key] = groups[key] || []).push({ seg: seg, endKey: endKey });
+    });
+  });
+  Object.keys(groups).forEach(function (key) {
+    var list = groups[key];
+    if (list.length < 2) return;
+    var yOf = function (ref) {
+      var d = deviceById(ref.device);
+      if (!d) return 0;
+      return nodeGeom(d).y;
+    };
+    list.slice().sort(function (a, b) {
+      var otherA = a.endKey === 'from' ? a.seg.to : a.seg.from;
+      var otherB = b.endKey === 'from' ? b.seg.to : b.seg.from;
+      return yOf(otherA) - yOf(otherB);
+    }).forEach(function (item, i) {
+      var off = (i - (list.length - 1) / 2) * FAN_SPACING;
+      if (item.endKey === 'from') item.seg.fromOff = off;
+      else item.seg.toOff = off;
+    });
+  });
+}
+
+/* ============================================================================
+ * 渲染：本体 → 线段集合 → SVG 字符串 → innerHTML 整体替换
+ * ========================================================================= */
+function isBPortRef(ref) {
+  var found = portByRef(ref.device, ref.port);
+  return !!found && isMirror(found.port);
+}
+
+function buildSegments() {
+  var segs = [];
+  if (S.view.mode === 'physical') {
+    physicalLinks().forEach(function (l) {
+      segs.push({
+        kind: 'phys', linkId: l.id, from: l.from, to: l.to,
+        color: SIGNAL_COLORS[l.signal_type] || '#94a3b8',
+        width: l.signal_type === 'ip' ? 2.5 : 1.5,
+        dash: ''
+      });
+    });
+  } else {
+    var flows = allFlows();
+    if (S.view.selectedFlow) flows = flows.filter(function (f) { return f.address === S.view.selectedFlow; });
+    // 流多的时候线上标签会糊成一片：默认只给选中的流（或流数很少时）标名字，
+    // 其余靠颜色 + 右侧流面板对应，选中某条流后它的标签会出来
+    var showLabels = !!S.view.selectedFlow || flows.length <= 3;
+    var byAddr = {};
+    flows.forEach(function (f) { byAddr[f.address] = f; });
+
+    // 1) 物理路径上的流（trace 命中的物理连线，断路段不画）
+    flows.forEach(function (f) {
+      var color = flowColor(f.address);
+      f.paths.forEach(function (p) {
+        p.linkIds.forEach(function (id) {
+          var l = linkById(id);
+          if (!l) return;
+          if (isBPortRef(l.from) || isBPortRef(l.to)) return;   // B 口线不画
+          segs.push({
+            kind: 'flow', from: l.from, to: l.to, color: color,
+            label: showLabels ? f.name : '', width: 3, dash: '8 4'
+          });
+        });
+      });
+    });
+
+    // 2) 信号连线（路由视图直接按连线画，可点击删除）
+    links().forEach(function (l) {
+      if (l.kind !== 'signal' || !l.stream) return;
+      if (S.view.selectedFlow && l.stream !== S.view.selectedFlow) return;
+      if (isBPortRef(l.from) || isBPortRef(l.to)) return;
+      var f = byAddr[l.stream] || allFlows().filter(function (x) { return x.address === l.stream; })[0];
+      segs.push({
+        kind: 'sig', sigId: l.id, from: l.from, to: l.to,
+        color: flowColor(l.stream), label: showLabels ? ((f && f.name) || l.stream) : '', width: 3, dash: '8 4'
+      });
+    });
+  }
+  applyFanOffsets(segs);
+  return segs;
+}
+
+function labelWidth(text) { return String(text).length * 11 + 18; }
+
+function segSvg(seg) {
+  var s = portPoint(seg.from), t = portPoint(seg.to);
+  if (!s || !t) return '';
+  var geo = bezierOf(s, t, seg.fromOff, seg.toOff);
+  // 向左走的流（如 PGM 回程）整线蓝色，一眼区分传输方向
+  var color = (seg.kind !== 'phys' && t.x < s.x) ? '#4aa3df' : seg.color;
+  var out = '';
+  var hitAttr = seg.linkId ? ' data-link="' + esc(seg.linkId) + '"'
+    : (seg.sigId ? ' data-sig="' + esc(seg.sigId) + '"' : ' data-flow="1"');
+  // 线下面垫一条同色低透明度粗线，模拟辉光（比 filter 便宜，几十条线也不掉帧）
+  out += '<path class="edge-glow" d="' + geo.d + '" stroke="' + color +
+    '" stroke-width="' + (seg.width + (seg.kind === 'phys' ? 6 : 8)) +
+    '" stroke-opacity="' + (seg.kind === 'phys' ? 0.07 : 0.13) + '"' +
+    (seg.dash ? ' stroke-dasharray="' + seg.dash + '"' : '') + ' />';
+  out += '<path class="edge ' + (seg.kind === 'phys' ? 'phys' : (seg.kind === 'sig' ? 'sig' : 'flow')) + '"' +
+    ' d="' + geo.d + '" stroke="' + color + '" stroke-width="' + seg.width + '"' +
+    (seg.dash ? ' stroke-dasharray="' + seg.dash + '"' : '') + hitAttr + ' />';
+  if (seg.linkId || seg.sigId) {
+    out += '<path class="edge-hit" d="' + geo.d + '"' + hitAttr + ' />';
+  }
+  if (seg.label) {
+    // 标签压在线上（贝塞尔 t=0.5 处）；并排多流时按扇形偏移轻推，减少标签互相压字
+    var nudge = clamp(((seg.fromOff || 0) + (seg.toOff || 0)) * 0.35, -11, 11);
+    var lx = geo.mid.x + geo.px * nudge;
+    var ly = geo.mid.y + geo.py * nudge;
+    var w = labelWidth(seg.label);
+    var x = lx - w / 2, y = ly - 10;
+    out += '<rect class="lbl-bg" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + w + '" height="20" rx="5" stroke="' + color + '"/>' +
+      '<text class="lbl-tx" x="' + lx.toFixed(1) + '" y="' + (ly + 4).toFixed(1) + '" text-anchor="middle" fill="' + color + '">' + esc(seg.label) + '</text>';
+  }
+  return out;
+}
+
+function portSvg(dev, item) {
+  var p = item.port;
+  var color = PORT_COLORS[p.type] || '#94a3b8';
+  var armedHere = false;
+  var pick = S.view.picking, armed = S.view.armed;
+  if (pick && pick.deviceId === dev.id && pick.portId === p.id) armedHere = true;
+  if (armed && armed.deviceId === dev.id && armed.portId === p.id) armedHere = true;
+
+  var out = '<g class="port" data-port="' + esc(dev.id) + '|' + esc(p.id) + '">';
+  if (armedHere) out += '<circle class="halo" r="9" fill="none" stroke="#38bdf8" stroke-width="2"/>';
+  if (isBidi(p)) {
+    out += '<circle class="bar" r="4.5" fill="' + color + '"/>';
+    out += '<circle class="dot" r="1.5" fill="#08111e" opacity="0.6"/>';
+  } else {
+    out += '<rect class="bar" x="-2" y="-5.5" width="4" height="11" rx="2" fill="' + color + '"/>';
+  }
+  // 端口编号：左口写在内侧左边距，右口写在内侧右边距
+  var tx = item.side < 0 ? 8 : -8;
+  out += '<text x="' + tx + '" y="3.5" text-anchor="' + (item.side < 0 ? 'start' : 'end') + '">' + esc(p.number) + '</text>';
+  out += '<circle class="hit" r="9" fill="rgba(0,0,0,0)"/>';
+  out += '</g>';
+  return out;
+}
+
+function deviceSvg(dev) {
+  var g = nodeGeom(dev);
+  var selected = S.view.selectedDevice === dev.id;
+  var color = typeColor(dev.type);
+  var tip = dev.type + ' · ' + dev.ports.length + ' 个端口';
+  var out = '<g class="dev' + (selected ? ' selected' : '') + '" data-dev="' + esc(dev.id) + '"' +
+    ' transform="translate(' + g.x.toFixed(1) + ',' + g.y.toFixed(1) + ')">' +
+    '<title>' + esc(dev.name + '\n' + tip) + '</title>';
+
+  // 卡片本体：竖向渐变 + 类型色描边 + 投影（选中时换成青色辉光）
+  out += '<rect class="body" x="0" y="0" width="' + g.w + '" height="' + g.h + '" rx="12"' +
+    ' fill="url(#cardGrad)" stroke="' + color + '" stroke-opacity="' + (selected ? 1 : 0.42) + '"' +
+    ' filter="url(' + (selected ? 'selGlow' : 'devShadow') + ')"/>';
+  out += '<rect x="1" y="1" width="' + (g.w - 2) + '" height="1" rx="0.5" fill="#ffffff" opacity="0.07"/>';
+  if (g.h > 52) {
+    out += '<line x1="1" y1="' + (NODE_PAD + NAME_H) + '" x2="' + (g.w - 1) + '" y2="' + (NODE_PAD + NAME_H) +
+      '" stroke="#94a3b8" stroke-opacity="0.12"/>';
+  }
+
+  // 右上角类型徽标（同一类型固定同色，扫一眼能分出设备类别）
+  var typeText = String(dev.type || '');
+  if (!typeText) typeText = '设备';
+  if (typeText.length > 12) typeText = typeText.slice(0, 11) + '…';
+  var chipW = clamp(typeText.length * 6.6 + 16, 36, 104);
+  var chipX = g.w - chipW - 8;
+  out += '<rect x="' + chipX.toFixed(1) + '" y="7" width="' + chipW.toFixed(1) + '" height="16" rx="8"' +
+    ' fill="' + color + '" fill-opacity="0.16" stroke="' + color + '" stroke-opacity="0.38"/>';
+  out += '<text class="chip-tx" x="' + (chipX + chipW / 2).toFixed(1) + '" y="18.5" text-anchor="middle" fill="' + color + '">' + esc(typeText) + '</text>';
+
+  var inN = 0, outN = 0;
+  dev.ports.forEach(function (p) { if (p.direction === 'in') inN++; else outN++; });
+  if (g.h >= 76) {
+    out += '<text class="dev-meta" x="' + (g.w / 2).toFixed(1) + '" y="' + (g.h / 2 + 4).toFixed(1) +
+      '" text-anchor="middle">入 ' + inN + ' · 出 ' + outN + '</text>';
+  }
+
+  var name = String(dev.name || '');
+  var maxChars = Math.max(5, Math.floor((g.w - chipW - 26) / 13));
+  if (name.length > maxChars) name = name.slice(0, maxChars - 1) + '…';
+  out += '<text class="name" x="13" y="' + (NODE_PAD + 14) + '" text-anchor="start">' + esc(name) + '</text>';
+  // 端口：先画右侧再画左侧，避免相互覆盖（都在卡片外沿，互不影响）
+  g.right.forEach(function (item) {
+    out += '<g transform="translate(' + g.w + ',' + (item.y - g.y).toFixed(1) + ')">' + portSvg(dev, item) + '</g>';
+  });
+  g.left.forEach(function (item) {
+    out += '<g transform="translate(0,' + (item.y - g.y).toFixed(1) + ')">' + portSvg(dev, item) + '</g>';
+  });
+  out += '</g>';
+  return out;
+}
+
+/* ============================================================================
+ * 关系图视图（只读）：按信号流向自动分层，卡片不重叠，坐标现算不落盘
+ * - 分层：从"没有入线的设备"出发，沿物理连线做最长路径松弛（有环时按松弛上限截断）
+ * - 同层内按名称排序并整体垂直居中；列宽 270、行高 118、卡片 200×68
+ * - 只读是刻意的：拖拽/连线仍回光纤连接视图做，避免两套坐标互相打架
+ * ========================================================================= */
+var REL_W = 200, REL_H = 68, REL_COL = 270, REL_ROW = 118;
+var TYPE_PALETTE = ['#38bdf8', '#f472b6', '#fbbf24', '#a78bfa', '#34d399', '#fb7185', '#22d3ee', '#f97316'];
+
+function typeColor(type) {
+  var h = 0, s = String(type || '');
+  for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return TYPE_PALETTE[h % TYPE_PALETTE.length];
+}
+
+function relationLayout() {
+  // 分层用全部连线：纯信号连线（IP 路由）的图也能分出上下游，不会全部挤在一层
+  var ds = devices(), ls = links(), i, k;
+  var depth = {};
+  ds.forEach(function (d) { depth[d.id] = 0; });
+
+  // 最长路径松弛：保证"上游总在左边"。最多迭代 n 轮，环不会无限增长。
+  for (i = 0; i < ds.length; i++) {
+    var changed = false;
+    for (k = 0; k < ls.length; k++) {
+      var l = ls[k];
+      var a = depth[l.from.device], b = depth[l.to.device];
+      if (a === undefined || b === undefined) continue;
+      if (a + 1 > b && a + 1 < ds.length) { depth[l.to.device] = a + 1; changed = true; }
+    }
+    if (!changed) break;
+  }
+
+  var cols = {};
+  ds.forEach(function (d) { (cols[depth[d.id]] = cols[depth[d.id]] || []).push(d); });
+  var keys = Object.keys(cols).map(Number).sort(function (x, y) { return x - y; });
+
+  // 同一层可能几十台设备：按 MAX_ROWS 折成多列，否则一列 20 台会把整图压成一条竖线
+  var MAX_ROWS = 5;
+  var columns = [];
+  keys.forEach(function (key) {
+    var list = cols[key].slice().sort(function (a, b) {
+      return String(a.name).localeCompare(String(b.name), 'zh-Hans-CN');
+    });
+    for (var p = 0; p < list.length; p += MAX_ROWS) columns.push(list.slice(p, p + MAX_ROWS));
+  });
+
+  var maxRows = 0;
+  columns.forEach(function (list) { maxRows = Math.max(maxRows, list.length); });
+
+  var nodes = {};
+  columns.forEach(function (list, ci) {
+    var offset = (maxRows - list.length) / 2 * REL_ROW;
+    list.forEach(function (d, ri) {
+      nodes[d.id] = { x: 60 + ci * REL_COL, y: 70 + offset + ri * REL_ROW, w: REL_W, h: REL_H };
+    });
+  });
+
+  return {
+    nodes: nodes, cols: columns.length, rows: maxRows,
+    minX: 60, minY: 70,
+    maxX: 60 + Math.max(0, columns.length - 1) * REL_COL + REL_W,
+    maxY: 70 + Math.max(0, maxRows - 1) * REL_ROW + REL_H
+  };
+}
+
+/** 卡片边界锚点：从中心指向目标，先碰到哪条边用哪条（与参考文档 rectAnchor 同一算法） */
+function cardAnchor(node, tx, ty) {
+  var cx = node.x + node.w / 2, cy = node.y + node.h / 2;
+  var dx = tx - cx, dy = ty - cy;
+  var sx = dx !== 0 ? (node.w / 2) / Math.abs(dx) : Infinity;
+  var sy = dy !== 0 ? (node.h / 2) / Math.abs(dy) : Infinity;
+  var t = Math.min(sx, sy);
+  return { x: cx + dx * t, y: cy + dy * t };
+}
+
+function relEdgePath(A, B) {
+  var ac = { x: A.x + A.w / 2, y: A.y + A.h / 2 };
+  var bc = { x: B.x + B.w / 2, y: B.y + B.h / 2 };
+  var s = cardAnchor(A, bc.x, bc.y);
+  var t = cardAnchor(B, ac.x, ac.y);
+  var dir = t.x >= s.x ? 1 : -1;
+  var curv = Math.max(Math.abs(t.x - s.x) * 0.45, 45);
+  return 'M ' + s.x.toFixed(1) + ',' + s.y.toFixed(1) +
+    ' C ' + (s.x + dir * curv).toFixed(1) + ',' + s.y.toFixed(1) +
+    ' ' + (t.x - dir * curv).toFixed(1) + ',' + t.y.toFixed(1) +
+    ' ' + t.x.toFixed(1) + ',' + t.y.toFixed(1);
+}
+
+function relNodeSvg(dev, n) {
+  if (!n) return '';
+  var color = typeColor(dev.type);
+  var sel = S.view.selectedDevice === dev.id;
+  var inN = 0, outN = 0, mc = 0;
+  dev.ports.forEach(function (p) {
+    if (p.direction === 'in') inN++; else outN++;
+    mc += (p.multicast_out || []).length;
+  });
+  var name = String(dev.name || '');
+  if (name.length > 12) name = name.slice(0, 11) + '…';
+  return '<g class="rel-node' + (sel ? ' selected' : '') + '" data-dev="' + esc(dev.id) + '">' +
+    '<title>' + esc(dev.name + '\n' + dev.type + ' · 入 ' + inN + ' / 出 ' + outN) + '</title>' +
+    '<rect class="rel-body" x="' + n.x + '" y="' + n.y + '" width="' + n.w + '" height="' + n.h +
+      '" rx="12" fill="url(#cardGrad)" stroke="' + color + '" stroke-opacity="' + (sel ? 1 : 0.45) +
+      '" stroke-width="' + (sel ? 2 : 1.2) + '" filter="url(' + (sel ? 'selGlow' : 'devShadow') + ')"/>' +
+    '<rect x="' + (n.x + 10) + '" y="' + (n.y + 12) + '" width="4" height="' + (n.h - 24) + '" rx="2" fill="' + color + '"/>' +
+    '<text class="rel-name" x="' + (n.x + 24) + '" y="' + (n.y + 27) + '">' + esc(name) + '</text>' +
+    '<text class="rel-meta" x="' + (n.x + 24) + '" y="' + (n.y + 45) + '">' + esc(dev.type || '') + ' · 入' + inN + '/出' + outN + '</text>' +
+    '<text class="rel-meta" x="' + (n.x + 24) + '" y="' + (n.y + 60) + '">' + (mc ? '发送 ' + mc + ' 路组播' : '无发送组播') + '</text>' +
+    '</g>';
+}
+
+function relationSvg() {
+  var rl = relationLayout();
+  var out = '';
+  // 先画线后画卡片：线端被卡片盖住，视觉上"停在边界"
+  physicalLinks().forEach(function (l) {
+    var A = rl.nodes[l.from.device], B = rl.nodes[l.to.device];
+    if (!A || !B) return;
+    out += '<path class="rel-edge" d="' + relEdgePath(A, B) + '" stroke="' + (SIGNAL_COLORS[l.signal_type] || '#94a3b8') +
+      '" stroke-width="' + (l.signal_type === 'ip' ? 2 : 1.4) + '"/>';
+  });
+  links().forEach(function (l) {
+    if (l.kind !== 'signal' || !l.stream) return;
+    var A = rl.nodes[l.from.device], B = rl.nodes[l.to.device];
+    if (!A || !B) return;
+    out += '<path class="rel-edge rel-sig" d="' + relEdgePath(A, B) + '" stroke="' + flowColor(l.stream) + '" stroke-width="2"/>';
+  });
+  devices().forEach(function (d) { out += relNodeSvg(d, rl.nodes[d.id]); });
+  return out;
+}
+
+function renderCanvas() {
+  var s = canvasSize(), cam = S.view.cam;
+  var vbW = s.w / cam.zoom, vbH = s.h / cam.zoom;
+  var html = '';
+  html += '<defs>' +
+    '<pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">' +
+    '<circle cx="1.2" cy="1.2" r="1.1" fill="#1b2f49"/></pattern>' +
+    '<linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0" stop-color="#1e3050"/><stop offset="1" stop-color="#131f33"/></linearGradient>' +
+    '<filter id="devShadow" x="-30%" y="-30%" width="160%" height="160%">' +
+    '<feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.55"/></filter>' +
+    '<filter id="selGlow" x="-45%" y="-45%" width="190%" height="190%">' +
+    '<feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#38bdf8" flood-opacity="0.6"/>' +
+    '<feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.45"/></filter>' +
+    '</defs>';
+  html += '<rect class="bg-rect" x="' + cam.x.toFixed(2) + '" y="' + cam.y.toFixed(2) +
+    '" width="' + vbW.toFixed(2) + '" height="' + vbH.toFixed(2) + '"/>';
+
+  if (S.view.mode === 'relation') {
+    html += relationSvg();
+  } else {
+    var segs = buildSegments();
+    segs.forEach(function (seg) { html += segSvg(seg); });
+    devices().forEach(function (d) { html += deviceSvg(d); });
+  }
+
+  // 连线预览（拖拽建线时只更新这条 path 的 d，不重绘整图）
+  html += '<path id="wirePreview" d="" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 5" pointer-events="none"/>';
+
+  // 缩放/平移全部落在 viewBox 上（这是唯一生效的相机；不要再用 CSS transform 叠一层）
+  $('svg').setAttribute('viewBox',
+    cam.x.toFixed(2) + ' ' + cam.y.toFixed(2) + ' ' + vbW.toFixed(2) + ' ' + vbH.toFixed(2));
+  $('svg').innerHTML = html;
+  $('emptyHint').classList.toggle('hidden', devices().length > 0);
+  $('stZoom').textContent = Math.round(cam.zoom * 100) + '%';
+  if ($('zoomVal')) $('zoomVal').textContent = Math.round(cam.zoom * 100) + '%';
+}
+
+function relationPanelHtml() {
+  var rl = relationLayout();
+  var counts = { ip: 0, sdi: 0, asi: 0 };
+  physicalLinks().forEach(function (l) { if (counts[l.signal_type] !== undefined) counts[l.signal_type]++; });
+  var physN = physicalLinks().length;
+  var sigN = links().filter(function (l) { return l.kind === 'signal'; }).length;
+  var html = '<div class="fp-head"><b>关系图（自动布局）</b></div>' +
+    '<div class="fp-empty">按信号流向从左到右分层：最左是源，最右是终端。只读视图 —— 拖拽、连线请切回「光纤连接」。</div>' +
+    '<div class="rel-stats">设备 ' + devices().length + ' · 连线 ' + (physN + sigN) +
+    (sigN ? '（信号 ' + sigN + '）' : '') + ' · 流 ' + allFlows().length + ' · ' + rl.cols + ' 列</div>';
+  html += '<div class="rel-lg"><i style="border-top-color:#4aa3df"></i>IP（光纤） ' + counts.ip + '</div>';
+  html += '<div class="rel-lg"><i style="border-top-color:#5fc46b"></i>SDI ' + counts.sdi + '</div>';
+  html += '<div class="rel-lg"><i style="border-top-color:#c76bb4"></i>ASI ' + counts.asi + '</div>';
+  if (sigN) html += '<div class="rel-lg"><i class="sig" style="border-top-color:#e2e8f0"></i>信号连线 ' + sigN + '</div>';
+  return html;
+}
+
+/** 流面板 + 底部选流条（HTML 层，不随 SVG 重绘） */
+function renderChrome() {
+  var panel = $('flowPanel');
+  if (S.view.mode === 'relation') {
+    panel.classList.remove('hidden');
+    panel.innerHTML = relationPanelHtml();
+  } else if (S.view.mode !== 'routing') {
+    panel.classList.add('hidden');
+  } else {
+    panel.classList.remove('hidden');
+    var flows = allFlows();
+    var html = '<div class="fp-head"><b>IP 信号流（' + flows.length + '）</b>' +
+      '<button class="mini" data-flow-all="1">全部</button></div>';
+    if (!flows.length) {
+      html += '<div class="fp-empty">未发现组播流。双击 IP 端口配置组播收发后，这里会自动列出可追踪的流。</div>';
+    } else {
+      flows.forEach(function (f) {
+        var broken = f.paths.some(function (p) { return p.broken; });
+        html += '<div class="flow-item' + (S.view.selectedFlow === f.address ? ' active' : '') + '" data-flow="' + esc(f.address) + '">' +
+          '<div class="fi-name"><i style="background:' + flowColor(f.address) + '"></i>' + esc(f.name) + '</div>' +
+          '<div class="fi-addr mono">' + esc(f.address) + '</div>' +
+          '<div class="fi-meta">' + f.paths.length + ' 条路径' + (broken ? '<span class="brk"> · 路径不完整</span>' : '') + '</div>' +
+          '</div>';
+      });
+    }
+    panel.innerHTML = html;
+  }
+
+  var bar = $('connectBar');
+  var html2 = '';
+  if (S.view.mode === 'routing' && S.view.picking) {
+    var picking = portByRef(S.view.picking.deviceId, S.view.picking.portId);
+    if (picking) {
+      html2 += '<span class="hint">' + esc(picking.device.name) + ' 端口 ' + esc(picking.port.number) + ' 的输出组播，选择要连接的流：</span>';
+      (picking.port.multicast_out || []).forEach(function (e, i) {
+        html2 += '<button class="mini" data-pick="' + i + '">' + esc(e.name || e.address) + '</button>';
+      });
+      html2 += '<button class="mini" data-pick-cancel="1">取消</button>';
+    }
+  } else if (S.view.mode === 'routing' && S.view.armed) {
+    html2 += '<span class="hint">已选流 <b>' + esc(S.view.armed.name || S.view.armed.address) +
+      '</b> —— 点击目标设备的 IP 端口完成连接（再点源口取消）</span>' +
+      '<button class="mini" data-arm-cancel="1">取消</button>';
+  }
+  if (html2) { bar.innerHTML = html2; bar.classList.remove('hidden'); }
+  else { bar.classList.add('hidden'); bar.innerHTML = ''; }
+
+  // 视图切换按钮态
+  Array.prototype.forEach.call(document.querySelectorAll('#viewSeg button'), function (b) {
+    b.classList.toggle('active', b.getAttribute('data-mode') === S.view.mode);
+  });
+}
+
+function renderStatus() {
+  var g = S.doc.graph;
+  $('stDevices').textContent = '设备 ' + g.devices.length;
+  // 连线总数（物理 + 信号）；细分在侧栏/图例里给，状态栏保持一眼可读
+  var physN = g.links.filter(function (l) { return l.kind !== 'signal'; }).length;
+  var sigN = g.links.filter(function (l) { return l.kind === 'signal'; }).length;
+  $('stLinks').textContent = '连线 ' + (physN + sigN) +
+    (sigN && physN ? '（信号 ' + sigN + '）' : '');
+  $('stLinks').title = '光纤连线 ' + physN + ' 条 · 信号连线 ' + sigN + ' 条';
+  $('stFlows').textContent = '流 ' + allFlows().length;
+  $('stMode').textContent = ({ physical: '光纤连接视图', routing: 'IP 路由视图', relation: '关系图视图' })[S.view.mode] || '光纤连接视图';
+  $('stSave').innerHTML = '<span class="dot' + (S.dirty ? ' dirty' : '') + '"></span>' + (S.dirty ? '未保存…' : '本地已保存');
+  $('btnUndo').disabled = S.undo.length === 0;
+  $('btnRedo').disabled = S.redo.length === 0;
+  if ($('graphName').value !== S.doc.name) $('graphName').value = S.doc.name;
+}
+
+function renderAll() {
+  renderCanvas();
+  renderChrome();
+  renderStatus();
+}
+
+/* ============================================================================
+ * 视图辅助：适应画布 / 整理布局
+ * ========================================================================= */
+function fitView(silent) {
+  var s = canvasSize();
+  if (!devices().length) {
+    S.view.cam = { x: 0, y: 0, zoom: 1 };
+    if (!silent) renderAll();
+    return;
+  }
+  var minX, minY, maxX, maxY;
+  if (S.view.mode === 'relation') {
+    var rl = relationLayout();
+    minX = rl.minX; minY = rl.minY; maxX = rl.maxX; maxY = rl.maxY;
+  } else {
+    minX = Infinity; minY = Infinity; maxX = -Infinity; maxY = -Infinity;
+    devices().forEach(function (d) {
+      var g = nodeGeom(d);
+      minX = Math.min(minX, g.x); minY = Math.min(minY, g.y);
+      maxX = Math.max(maxX, g.x + g.w); maxY = Math.max(maxY, g.y + g.h);
+    });
+  }
+  var pad = 60;
+  var zoom = clamp(Math.min(s.w / (maxX - minX + pad * 2), s.h / (maxY - minY + pad * 2)), 0.2, 1.6);
+  // 内容整体居中（而不是贴左上角），关系图/小图看起来才不空
+  var viewW = s.w / zoom, viewH = s.h / zoom;
+  S.view.cam = {
+    x: (minX + maxX) / 2 - viewW / 2,
+    y: (minY + maxY) / 2 - viewH / 2,
+    zoom: zoom
+  };
+  if (!silent) { renderAll(); toast('已适应画布', 'ok'); }
+}
+
+function tidyLayout() {
+  if (!devices().length) { toast('画布上没有设备', 'warn'); return; }
+  snapshot();
+  var cols = Math.max(1, Math.ceil(Math.sqrt(devices().length)));
+  devices().forEach(function (d, i) {
+    S.doc.layout.nodes[d.id] = {
+      x: 80 + (i % cols) * 320,
+      y: 80 + Math.floor(i / cols) * 260
+    };
+  });
+  afterChange();
+  fitView(true);
+  renderAll();
+  toast('已按网格整理布局', 'ok');
+}
+
+/* ============================================================================
+ * Toast / 菜单 / 弹窗框架
+ * ========================================================================= */
+function toast(msg, type) {
+  var wrap = $('toastWrap');
+  var el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(function () {
+    el.style.transition = 'opacity .2s';
+    el.style.opacity = '0';
+    setTimeout(function () { el.remove(); }, 220);
+  }, 2600);
+}
+
+function hideMenu() { $('menu').classList.add('hidden'); }
+
+function showMenu(x, y, items) {
+  var menu = $('menu');
+  var html = '';
+  items.forEach(function (it, i) {
+    if (!it) return;
+    if (it.sep) { html += '<div class="msep"></div>'; return; }
+    if (it.title) { html += '<div class="mtitle">' + esc(it.title) + '</div>'; return; }
+    html += '<div class="mi' + (it.disabled ? ' disabled' : '') + (it.danger ? ' danger' : '') +
+      '" data-mi="' + i + '">' + esc(it.label) + (it.key ? '<span class="k">' + esc(it.key) + '</span>' : '') + '</div>';
+  });
+  menu.innerHTML = html;
+  menu.classList.remove('hidden');
+  var w = menu.offsetWidth, h = menu.offsetHeight;
+  menu.style.left = Math.max(6, Math.min(x, window.innerWidth - w - 8)) + 'px';
+  menu.style.top = Math.max(6, Math.min(y, window.innerHeight - h - 8)) + 'px';
+  menu.__items = items;
+}
+
+/**
+ * 弹窗：可叠层（设备编辑里再开组播配置）。
+ * opts = {title, sub, body, size:'narrow|wide', buttons:[{label,cls,close,onClick}], onMount}
+ * button.onClick 返回 false 时阻止关闭。
+ */
+function modal(opts) {
+  var mask = document.createElement('div');
+  mask.className = 'mask';
+  var btnHtml = '';
+  (opts.buttons || []).forEach(function (b, i) {
+    btnHtml += '<button class="btn ' + (b.cls || '') + '" data-mbtn="' + i + '">' + esc(b.label) + '</button>';
+  });
+  mask.innerHTML =
+    '<div class="modal ' + (opts.size || '') + '">' +
+      '<div class="mhead"><b>' + esc(opts.title || '') + '</b>' +
+        (opts.sub ? '<span class="sub">' + esc(opts.sub) + '</span>' : '') +
+        '<button class="x" title="关闭">×</button>' +
+      '</div>' +
+      '<div class="mbody">' + (opts.body || '') + '</div>' +
+      (btnHtml ? '<div class="mfoot">' + btnHtml + '</div>' : '') +
+    '</div>';
+  document.body.appendChild(mask);
+
+  var entry = { mask: mask, onClose: opts.onClose };
+  S.modalStack.push(entry);
+
+  var close = function () { closeModal(); };
+  mask.querySelector('.x').addEventListener('click', close);
+  Array.prototype.forEach.call(mask.querySelectorAll('[data-mbtn]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var def = (opts.buttons || [])[Number(btn.getAttribute('data-mbtn'))];
+      if (!def) return;
+      var ret = def.onClick ? def.onClick(mask) : true;
+      if (ret !== false) close();
+    });
+  });
+  if (opts.onMount) opts.onMount(mask);
+  return mask;
+}
+
+function closeModal() {
+  var top = S.modalStack.pop();
+  if (!top) return;
+  if (top.onClose) top.onClose();
+  top.mask.remove();
+}
+
+function confirmDialog(title, html, onOk, okLabel, danger) {
+  modal({
+    title: title,
+    size: 'narrow',
+    body: '<div class="hintline" style="font-size:12.5px;color:#cbd5e1">' + html + '</div>',
+    buttons: [
+      { label: '取消' },
+      { label: okLabel || '确定', cls: danger === false ? 'primary' : 'danger', onClick: onOk }
+    ]
+  });
+}
+
+/* ============================================================================
+ * 视图切换 / 图库 / 导入导出
+ * ========================================================================= */
+/** 切视图/载入图后统一收尾：先渲染侧栏（决定画布宽度），再按新宽度自适应，最后重绘 */
+function applyViewMode() {
+  renderChrome();
+  fitView(true);
+  renderCanvas();
+  renderStatus();
+}
+
+function switchMode(mode) {
+  if (S.view.mode === mode) return;
+  S.view.mode = mode;
+  S.view.selectedFlow = '';
+  disarm();
+  lsSet(LS_UI, { mode: mode });
+  applyViewMode();
+}
+
+/** 只有信号连线、没有物理连线的图：默认打开 IP 路由视图（光纤视图会是孤立卡片，容易误以为图坏了） */
+function suggestedMode(doc) {
+  var hasPhys = doc.graph.links.some(function (l) { return l.kind !== 'signal'; });
+  var hasSig = doc.graph.links.some(function (l) { return l.kind === 'signal'; });
+  return (!hasPhys && hasSig) ? 'routing' : 'physical';
+}
+
+function normalizeDoc(raw) {
+  var src = raw && raw.graph ? raw.graph : raw;
+  if (!src || !Array.isArray(src.devices)) throw new Error('不是有效的信号图 JSON（缺少 devices 数组）');
+  var doc = emptyDoc(raw.name || src.name || '导入的信号图');
+  var idMap = {};
+
+  src.devices.forEach(function (d, i) {
+    if (!d || typeof d !== 'object') return;
+    var dev = {
+      id: String(d.id || ('dev_import_' + i)),
+      name: String(d.name || ('设备' + (i + 1))),
+      type: String(d.type || 'Unknown'),
+      ports: [],
+      inner_links: [],
+      sparse_ports: d.sparse_ports === true
+    };
+    if (idMap[dev.id]) dev.id = dev.id + '_' + i;
+    idMap[dev.id] = 1;
+    (Array.isArray(d.ports) ? d.ports : []).forEach(function (p, k) {
+      if (!p) return;
+      dev.ports.push({
+        id: String(p.id || uid('p')),
+        number: String(p.number === undefined ? k + 1 : p.number),
+        type: PORT_TYPES.indexOf(p.type) >= 0 ? p.type : 'ip_port',
+        direction: p.direction === 'in' ? 'in' : 'out',
+        bidirectional: p.bidirectional === true || p.type === 'ip_port',
+        program: String(p.program || ''),
+        multicast_in: (Array.isArray(p.multicast_in) ? p.multicast_in : []).map(function (m) {
+          return { id: m && m.id ? String(m.id) : uid('mc'), address: String((m && m.address) || ''), name: String((m && m.name) || '') };
+        }).filter(function (m) { return m.address; }),
+        multicast_out: (Array.isArray(p.multicast_out) ? p.multicast_out : []).map(function (m) {
+          return { id: m && m.id ? String(m.id) : uid('mc'), address: String((m && m.address) || ''), name: String((m && m.name) || '') };
+        }).filter(function (m) { return m.address; })
+      });
+    });
+    (Array.isArray(d.inner_links) ? d.inner_links : []).forEach(function (l) {
+      if (!l) return;
+      dev.inner_links.push({ from_port: String(l.from_port || ''), to_port: String(l.to_port || '') });
+    });
+    doc.graph.devices.push(dev);
+  });
+
+  var byId = {};
+  doc.graph.devices.forEach(function (d) { byId[d.id] = d; });
+  (Array.isArray(src.links) ? src.links : []).forEach(function (l) {
+    if (!l || !l.from || !l.to) return;
+    var f = byId[l.from.device], t = byId[l.to.device];
+    if (!f || !t) return;
+    var hasPort = function (dev, pid) { return dev.ports.some(function (p) { return p.id === pid; }); };
+    if (!hasPort(f, l.from.port) || !hasPort(t, l.to.port)) return;
+    doc.graph.links.push({
+      id: String(l.id || uid('link')),
+      signal_type: ['sdi', 'asi', 'ip'].indexOf(l.signal_type) >= 0 ? l.signal_type : 'ip',
+      from: { device: String(l.from.device), port: String(l.from.port) },
+      to: { device: String(l.to.device), port: String(l.to.port) },
+      kind: l.kind === 'signal' ? 'signal' : undefined,
+      stream: l.kind === 'signal' ? String(l.stream || '') : undefined
+    });
+  });
+
+  // 坐标：只保留存在的设备
+  var nodes = (raw.layout && raw.layout.nodes) || {};
+  doc.graph.devices.forEach(function (d) {
+    var n = nodes[d.id];
+    doc.layout.nodes[d.id] = (n && isFinite(n.x) && isFinite(n.y))
+      ? { x: Number(n.x), y: Number(n.y) }
+      : autoPositionFor(doc);
+  });
+  mirrorBPortsIn(doc.graph);
+  return doc;
+}
+/** 给指定文档找空位（normalize 时布局尚未写进 S，故单独实现） */
+function autoPositionFor(doc) {
+  var occupied = {};
+  Object.keys(doc.layout.nodes).forEach(function (id) {
+    var p = doc.layout.nodes[id];
+    occupied[Math.round(p.x / 300) + ':' + Math.round(p.y / 250)] = 1;
+  });
+  for (var i = 0; i < 400; i++) {
+    var x = 60 + (i % 5) * 300, y = 60 + Math.floor(i / 5) * 250;
+    if (!occupied[Math.round(x / 300) + ':' + Math.round(y / 250)]) return { x: x, y: y };
+  }
+  return { x: 60, y: 60 };
+}
+
+function saveToLibrary() {
+  var lib = lsGet(LS_LIB, []);
+  S.doc.graph.name = S.doc.name;
+  if (!S.doc.id) S.doc.id = uid('g');
+  var rec = {
+    id: S.doc.id, name: S.doc.name, updatedAt: new Date().toISOString(),
+    graph: deep(S.doc.graph), layout: deep(S.doc.layout)
+  };
+  var idx = -1;
+  lib.forEach(function (r, i) { if (r.id === rec.id) idx = i; });
+  if (idx >= 0) lib[idx] = rec; else lib.push(rec);
+  S.library = lib;
+  lsSet(LS_LIB, lib);
+  persistCurrent();
+  toast('已保存到图库：' + S.doc.name, 'ok');
+}
+
+function saveAsNew() {
+  var name = (S.doc.name || '未命名信号图') + ' 副本';
+  S.doc.id = null;
+  S.doc.name = name;
+  $('graphName').value = name;
+  saveToLibrary();
+}
+
+function openDoc(rec) {
+  disarm();
+  S.undo = [];                                  // 换图即换世界：撤销栈不跨图
+  S.redo = [];
+  S.doc = {
+    id: rec.id,
+    name: rec.name,
+    graph: deep(rec.graph),
+    layout: Object.assign(emptyLayout(), deep(rec.layout || emptyLayout()))
+  };
+  S.view.selectedDevice = '';
+  S.view.selectedFlow = '';
+  S.view.mode = suggestedMode(S.doc);
+  mirrorBPorts();
+  $('graphName').value = S.doc.name;
+  persistCurrent();
+  applyViewMode();
+  toast('已打开：' + S.doc.name, 'ok');
+}
+
+function newDoc() {
+  confirmDialog('新建信号图', '当前画布将被清空（图库里已保存的图不受影响）。', function () {
+    disarm();
+    S.undo = []; S.redo = [];
+    S.doc = emptyDoc('未命名信号图');
+    $('graphName').value = S.doc.name;
+    S.view.cam = { x: 0, y: 0, zoom: 1 };
+    persistCurrent();
+    renderAll();
+  }, '新建');
+}
+
+function exportJson() {
+  S.doc.graph.name = S.doc.name;
+  var payload = {
+    app: 'sysflow', schemaVersion: 2, exportedAt: new Date().toISOString(),
+    name: S.doc.name, graph: S.doc.graph, layout: S.doc.layout
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (S.doc.name || 'sysflow') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast('已导出 JSON 文件', 'ok');
+}
+
+function importFile(file) {
+  var reader = new FileReader();
+  reader.onload = function () {
+    var list;
+    try {
+      var raw = JSON.parse(String(reader.result));
+      list = Array.isArray(raw) ? raw : [raw];      // 旧接口 /api/graph/all 直接返回数组
+      if (!list.length) throw new Error('文件里没有图');
+    } catch (err) {
+      toast('导入失败：' + (err && err.message ? err.message : '文件格式不正确'), 'err');
+      return;
+    }
+    var docs = [], skipped = 0;
+    list.forEach(function (item) {
+      try { docs.push(normalizeDoc(item)); } catch (e) { skipped++; }
+    });
+    if (!docs.length) { toast('导入失败：没有可识别的信号图', 'err'); return; }
+    if (skipped) toast('已跳过 ' + skipped + ' 张无法识别的图', 'warn');
+    importDocs(docs);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+/** 1 张 → 替换当前画布（先确认）；多张 → 全部进图库并打开第一张 */
+function importDocs(docs) {
+  if (docs.length === 1) {
+    var doc = docs[0];
+    confirmDialog('导入信号图',
+      '将载入「' + esc(doc.name) + '」：' + doc.graph.devices.length + ' 台设备 / ' + doc.graph.links.length + ' 条连线。<br>当前画布会被替换（可用 Ctrl+Z 撤回上一步操作，但不恢复整图）。',
+      function () {
+        disarm();
+        S.undo = []; S.redo = [];
+        S.doc = doc;
+        S.view.mode = suggestedMode(doc);
+        $('graphName').value = S.doc.name;
+        mirrorBPorts();
+        persistCurrent();
+        applyViewMode();
+        toast('已导入：' + doc.name +
+          (S.view.mode === 'routing' ? '（该图只有信号连线，已切到 IP 路由视图）' : ''), 'ok');
+      }, '导入', false);
+    return;
+  }
+
+  var lib = lsGet(LS_LIB, []);
+  var now = new Date().toISOString();
+  var first = null;
+  docs.forEach(function (d) {
+    d.id = uid('g');
+    d.graph.name = d.name;
+    var rec = { id: d.id, name: d.name, updatedAt: now, graph: d.graph, layout: d.layout };
+    lib.push(rec);
+    if (!first) first = rec;
+  });
+  lsSet(LS_LIB, lib);
+  S.library = lib;
+  openDoc(first);
+  toast('已导入 ' + docs.length + ' 张图到图库，当前打开「' + first.name + '」', 'ok');
+}
+
+/* ------------------------------ 示例数据 ------------------------------ */
+function loadDemo() {
+  function mk(id, name, type, ports) {
+    return {
+      id: id, name: name, type: type, sparse_ports: false,
+      ports: ports.map(function (p, i) {
+        return {
+          id: id + '_p' + (i + 1), number: p.number, type: p.type, direction: p.direction,
+          bidirectional: p.type === 'ip_port' || !!p.bidirectional,
+          program: p.program || '',
+          multicast_in: (p.in || []).map(function (m) { return { id: uid('mc'), address: m[0], name: m[1] }; }),
+          multicast_out: (p.out || []).map(function (m) { return { id: uid('mc'), address: m[0], name: m[1] }; })
+        };
+      }),
+      inner_links: []
+    };
+  }
+  var enc = mk('demo_enc', '编码器 1', 'Encoder', [
+    { number: '1', type: 'ip_port', direction: 'out', out: [['udp://239.0.0.21:5000', 'Stream 01']] },
+    { number: '2', type: 'ip_port', direction: 'out', out: [['udp://239.0.0.22:5000', 'Stream 02']] }
+  ]);
+
+  // 1-4 口在左（收流），5-8 口在右（转发出去）——双向口，方向只影响画在哪一侧
+  var swPorts = [];
+  for (var i = 1; i <= 8; i++) swPorts.push({ number: String(i), type: 'ip_port', direction: i <= 4 ? 'in' : 'out' });
+  swPorts[0].in = [['udp://239.0.0.21:5000', 'Stream 01']];
+  swPorts[4].out = [['udp://239.0.0.21:5000', 'Stream 01']];
+  swPorts[1].in = [['udp://239.0.0.22:5000', 'Stream 02']];
+  swPorts[5].out = [['udp://239.0.0.22:5000', 'Stream 02']];
+  var sw = mk('demo_sw', '交换机 1', 'Net-Switch', swPorts);
+
+  var mon1 = mk('demo_mon1', '监视器 1', 'Monitor', [
+    { number: '1', type: 'ip_port', direction: 'in', in: [['udp://239.0.0.21:5000', 'Stream 01']] }
+  ]);
+  var mon2 = mk('demo_mon2', '监视器 2', 'Monitor', [
+    { number: '1', type: 'ip_port', direction: 'in', in: [['udp://239.0.0.22:5000', 'Stream 02']] }
+  ]);
+
+  var doc = emptyDoc('示例：两路信号');
+  doc.id = null;
+  doc.graph.devices = [enc, sw, mon1, mon2];
+  doc.graph.links = [
+    { id: 'demo_l1', signal_type: 'ip', from: { device: 'demo_enc', port: 'demo_enc_p1' }, to: { device: 'demo_sw', port: 'demo_sw_p1' } },
+    { id: 'demo_l2', signal_type: 'ip', from: { device: 'demo_sw', port: 'demo_sw_p5' }, to: { device: 'demo_mon1', port: 'demo_mon1_p1' } },
+    { id: 'demo_l3', signal_type: 'ip', from: { device: 'demo_enc', port: 'demo_enc_p2' }, to: { device: 'demo_sw', port: 'demo_sw_p2' } },
+    { id: 'demo_l4', signal_type: 'ip', from: { device: 'demo_sw', port: 'demo_sw_p6' }, to: { device: 'demo_mon2', port: 'demo_mon2_p1' } }
+  ];
+  doc.layout.nodes = {
+    demo_enc: { x: 80, y: 170 }, demo_sw: { x: 420, y: 100 },
+    demo_mon1: { x: 800, y: 100 }, demo_mon2: { x: 800, y: 330 }
+  };
+  return doc;
+}
+
+function openDemo() {
+  disarm();
+  S.undo = []; S.redo = [];
+  S.doc = loadDemo();
+  S.view.mode = 'physical';
+  $('graphName').value = S.doc.name;
+  fitView(true);
+  persistCurrent();
+  renderAll();
+  toast('已载入示例图（4 台设备 / 2 路组播）', 'ok');
+}
+
+/* ============================================================================
+ * 对话框：添加设备 / 设备编辑 / 组播配置 / 设备模板 / 图库
+ * ========================================================================= */
+function templateById(id) {
+  for (var i = 0; i < S.templates.length; i++) if (S.templates[i].id === id) return S.templates[i];
+  return null;
+}
+
+function openAddDeviceDialog() {
+  var body = '<div class="hintline">选一个设备模板放到画布上；放好后右键设备可改名、增删端口、配置组播。</div>';
+  if (!S.templates.length) {
+    body += '<div class="fp-empty">还没有设备模板，点「设备模板」新建一个。</div>';
+  }
+  S.templates.forEach(function (t) {
+    body += '<div class="list-row"><div><div class="nm">' + esc(t.name) + ' <span class="tag">' + esc(t.type) + '</span></div>' +
+      '<div class="ds">' + esc(t.description || '') + ' · 端口 ' + (t.ports || []).length + '</div></div>' +
+      '<div class="sp"><button class="btn primary" data-add-tpl="' + esc(t.id) + '">添加</button></div></div>';
+  });
+  var mask = modal({
+    title: '添加设备', sub: '模板', body: body,
+    buttons: [{ label: '设备模板管理', onClick: function () { setTimeout(openTemplateManager, 0); } }, { label: '关闭' }]
+  });
+  mask.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-add-tpl]');
+    if (!b) return;
+    var tpl = templateById(b.getAttribute('data-add-tpl'));
+    if (tpl) {
+      var dev = addDevice(tpl, autoPosition());
+      closeModal();
+      if (dev) { S.view.selectedDevice = dev.id; fitView(true); renderAll(); toast('已添加：' + dev.name, 'ok'); }
+    }
+  });
+}
+
+/* ---- 设备编辑 ---- */
+function portTypeOptions(current) {
+  return PORT_TYPES.map(function (t) {
+    return '<option value="' + t + '"' + (t === current ? ' selected' : '') + '>' + t + '</option>';
+  }).join('');
+}
+
+function deviceFormHtml(work) {
+  var left = work.ports.filter(function (p) { return p.direction === 'in'; });
+  var right = work.ports.filter(function (p) { return p.direction === 'out'; });
+  var tpl = S.templates.filter(function (t) { return t.type === work.type; })[0];
+  var html = '';
+
+  html += '<div class="card">' +
+    '<div class="row"><label class="w120">设备名称</label>' +
+      '<input type="text" class="grow" data-f="name" value="' + esc(work.name) + '"></div>' +
+    '<div class="row"><label class="w120">设备类型</label><span class="tag">' + esc(work.type) + '</span>' +
+      '<span class="ds">' + esc(tpl ? (tpl.name + (tpl.description ? ' · ' + tpl.description : '')) : '自定义类型') + '</span></div>' +
+    '<div class="row"><label class="w120">端口间距</label><label class="inline">' +
+      '<input type="checkbox" data-f="sparse"' + (work.sparse_ports ? ' checked' : '') + '> 放大 5 倍（端口密集、连线汇聚看不清时勾选）</label></div>' +
+    '</div>';
+
+  function portRows(list, dir) {
+    var rows = '';
+    list.forEach(function (p, i) {
+      rows += '<tr data-port-row="' + esc(p.id) + '">' +
+        '<td style="width:34px;color:#64748b">' + (i + 1) + '</td>' +
+        '<td><input type="text" style="width:100%" data-port="' + esc(p.id) + '" data-f="number" value="' + esc(p.number) + '"></td>' +
+        '<td style="width:120px"><select style="width:100%" data-port="' + esc(p.id) + '" data-f="type">' + portTypeOptions(p.type) + '</select></td>' +
+        '<td style="width:66px">' + (dir === 'out' && p.type !== 'ip_port'
+          ? '<label class="inline"><input type="checkbox" data-port="' + esc(p.id) + '" data-f="bidi"' + (p.bidirectional ? ' checked' : '') + '>双向</label>'
+          : '<span class="tag">双向</span>') + '</td>' +
+        '<td style="width:64px">' + (p.type === 'ip_port'
+          ? '<button class="mini" data-mc-port="' + esc(p.id) + '">组播</button>' : '') + '</td>' +
+        '<td style="width:58px"><button class="mini danger" data-del-port="' + esc(p.id) + '">删除</button></td>' +
+        '</tr>';
+    });
+    return rows || '<tr><td colspan="6" style="color:#64748b;padding-bottom:8px">暂无端口</td></tr>';
+  }
+
+  html += '<div class="card"><h4>输入端口<span class="sp"></span>' +
+    '<button class="ghost" data-add-port="in">＋ 添加端口</button></h4>' +
+    '<table class="tbl"><thead><tr><th>#</th><th>端口号</th><th>类型</th><th>属性</th><th></th><th></th></tr></thead>' +
+    '<tbody>' + portRows(left, 'in') + '</tbody></table></div>';
+
+  html += '<div class="card"><h4>输出端口<span class="sp"></span>' +
+    '<button class="ghost" data-add-port="out">＋ 添加端口</button></h4>' +
+    '<table class="tbl"><thead><tr><th>#</th><th>端口号</th><th>类型</th><th>属性</th><th></th><th></th></tr></thead>' +
+    '<tbody>' + portRows(right, 'out') + '</tbody></table>' +
+    '<div class="hintline">IP 端口天然双向；SDI/ASI 勾「双向」后也可作为起点与落点。</div></div>';
+
+  html += '<div class="card"><h4>输出节目</h4>';
+  if (!right.length) html += '<div class="hintline">没有输出端口</div>';
+  right.forEach(function (p, i) {
+    html += '<div class="row"><label class="w120">输出口' + (i + 1) + '（' + esc(p.number) + '）</label>' +
+      '<input type="text" class="grow" data-port="' + esc(p.id) + '" data-f="program" value="' + esc(p.program || '') + '"></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="card"><h4>内部链接<span class="sp"></span>' +
+    '<button class="ghost" data-add-il="1">＋ 添加链接</button></h4>' +
+    '<div class="hintline">转发设备用：流从「入端口」进来后从指定「出端口」出去（如交换机/光传输）。没有内部链接时按同地址规则自动找出口。</div>';
+  (work.inner_links || []).forEach(function (il, i) {
+    html += '<div class="row" data-il-row="' + i + '">' +
+      '<select data-il="' + i + '" data-f="from" style="flex:1">' + left.map(function (p) {
+        return '<option value="' + esc(p.number) + '"' + (p.number === il.from_port ? ' selected' : '') + '>' + esc(p.number) + '</option>';
+      }).join('') + '</select><span style="color:#64748b">→</span>' +
+      '<select data-il="' + i + '" data-f="to" style="flex:1">' + right.map(function (p) {
+        return '<option value="' + esc(p.number) + '"' + (p.number === il.to_port ? ' selected' : '') + '>' + esc(p.number) + '</option>';
+      }).join('') + '</select>' +
+      '<button class="mini danger" data-del-il="' + i + '">删除</button></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function openDeviceEditor(deviceId) {
+  var device = deviceById(deviceId);
+  if (!device) return;
+  var work = deep(device);
+
+  var mask = modal({
+    title: '编辑设备', sub: work.name, size: 'wide', body: deviceFormHtml(work),
+    buttons: [
+      { label: '取消' },
+      { label: '保存', cls: 'primary', onClick: function () { updateDevice(deviceId, work); toast('设备已更新', 'ok'); } }
+    ]
+  });
+
+  var body = mask.querySelector('.mbody');
+  var rerender = function () {
+    body.innerHTML = deviceFormHtml(work);
+    // 重新渲染后恢复滚动位置，避免添加端口时跳回顶部
+    var sc = body.scrollTop;
+    body.scrollTop = sc;
+  };
+
+  // 输入同步：DOM → work（work 始终是唯一编辑副本）
+  body.addEventListener('input', function (e) {
+    var t = e.target;
+    var f = t.getAttribute('data-f');
+    if (!f) return;
+    var portId = t.getAttribute('data-port');
+    if (portId) {
+      var port = work.ports.filter(function (p) { return p.id === portId; })[0];
+      if (!port) return;
+      if (f === 'number') port.number = t.value;
+      else if (f === 'type') {
+        port.type = t.value;
+        if (port.type === 'ip_port') port.bidirectional = true;
+      } else if (f === 'bidi') port.bidirectional = t.checked;
+      else if (f === 'program') port.program = t.value;
+      return;
+    }
+    var ilIdx = t.getAttribute('data-il');
+    if (ilIdx !== null) {
+      var il = work.inner_links[Number(ilIdx)];
+      if (il) il[f === 'from' ? 'from_port' : 'to_port'] = t.value;
+      return;
+    }
+    if (f === 'name') work.name = t.value;
+    if (f === 'sparse') work.sparse_ports = t.checked;
+  });
+  body.addEventListener('change', function (e) {
+    var t = e.target;
+    var f = t.getAttribute('data-f');
+    if (f === 'type') {
+      var pid2 = t.getAttribute('data-port');
+      var port2 = pid2 ? work.ports.filter(function (p) { return p.id === pid2; })[0] : null;
+      if (port2) { port2.type = t.value; if (port2.type === 'ip_port') port2.bidirectional = true; }
+      rerender();                                // 类型变化会影响「双向」列与组播按钮
+    } else if (f === 'bidi' || f === 'sparse') {
+      if (f === 'sparse') work.sparse_ports = t.checked;
+      else {
+        var pid3 = t.getAttribute('data-port');
+        var port3 = pid3 ? work.ports.filter(function (p) { return p.id === pid3; })[0] : null;
+        if (port3) port3.bidirectional = t.checked;
+      }
+    }
+  });
+
+  body.addEventListener('click', function (e) {
+    var b;
+    if ((b = e.target.closest('[data-add-port]'))) {
+      work.ports.push({
+        id: uid('p'), number: 'X', type: 'ip_port', direction: b.getAttribute('data-add-port'),
+        bidirectional: true, program: '', multicast_in: [], multicast_out: []
+      });
+      rerender();
+      return;
+    }
+    if ((b = e.target.closest('[data-del-port]'))) {
+      var pid = b.getAttribute('data-del-port');
+      work.ports = work.ports.filter(function (p) { return p.id !== pid; });
+      rerender();
+      return;
+    }
+    if ((b = e.target.closest('[data-add-il]'))) {
+      var firstIn = work.ports.filter(function (p) { return p.direction === 'in'; })[0];
+      var firstOut = work.ports.filter(function (p) { return p.direction === 'out'; })[0];
+      work.inner_links = work.inner_links || [];
+      work.inner_links.push({ from_port: firstIn ? firstIn.number : '', to_port: firstOut ? firstOut.number : '' });
+      rerender();
+      return;
+    }
+    if ((b = e.target.closest('[data-del-il]'))) {
+      work.inner_links.splice(Number(b.getAttribute('data-del-il')), 1);
+      rerender();
+      return;
+    }
+    if ((b = e.target.closest('[data-mc-port]'))) {
+      var port = work.ports.filter(function (p) { return p.id === b.getAttribute('data-mc-port'); })[0];
+      if (port) openMulticastModal(port, { live: false, onChange: rerender });
+    }
+  });
+}
+
+/* ---- 组播配置 ---- */
+function multicastBodyHtml(port, outs) {
+  var html = '';
+  html += '<div class="card"><h4>输入组播地址' +
+    '<span class="sp" style="font-weight:400;font-size:11px;color:#64748b">由信号连线自动生成 · 地址跟随源端 · 只读</span></h4>';
+  if (!(port.multicast_in || []).length) html += '<div class="hintline">暂无输入组播（建立信号连线后自动生成）</div>';
+  (port.multicast_in || []).forEach(function (m, i) {
+    html += '<div class="row"><span style="color:#64748b;width:44px">SRT' + (i + 1) + '</span>' +
+      '<span class="mono grow">' + esc(m.address) + '</span><span style="color:#94a3b8;width:150px">' + esc(m.name) + '</span></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="card"><h4>输出组播地址' + (isMirror(port)
+    ? '<span class="sp" style="font-weight:400;font-size:11px;color:#64748b">B 口自动跟随同号 A 口 · 只读</span>'
+    : '<span class="sp"></span><button class="ghost" data-mc-add="1">＋ 添加</button>') + '</h4>';
+  if (!outs.length) html += '<div class="hintline">暂无输出组播' + (isMirror(port) ? '' : '，点「添加」新增') + '</div>';
+  outs.forEach(function (m, i) {
+    if (isMirror(port)) {
+      html += '<div class="row"><span style="color:#64748b;width:44px">SRT' + (i + 1) + '</span>' +
+        '<span class="mono grow">' + esc(m.address) + '</span><span style="color:#94a3b8;width:150px">' + esc(m.name) + '</span></div>';
+    } else {
+      html += '<div class="row"><span style="color:#64748b;width:44px">SRT' + (i + 1) + '</span>' +
+        '<input type="text" class="grow mono" data-mc="' + i + '" data-f="address" placeholder="udp://239.0.0.21:5000" value="' + esc(m.address) + '">' +
+        '<input type="text" style="width:170px" data-mc="' + i + '" data-f="name" placeholder="信号名称，如 Stream 01" value="' + esc(m.name) + '">' +
+        '<button class="mini danger" data-mc-del="' + i + '">删除</button></div>';
+    }
+  });
+  if (!isMirror(port)) {
+    html += '<div class="hintline">组播地址即流标识：改地址会让全图的接收条目与信号连线自动跟随；删除后对应接收条目会被清理。</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function openMulticastModal(port, opts) {
+  opts = opts || {};
+  var outs = deep(port.multicast_out || []);
+  var mask = modal({
+    title: '端口 ' + port.number + ' 组播配置',
+    sub: (opts.live ? '画布端口' : '设备编辑中') + ' · ' + port.type,
+    body: multicastBodyHtml(port, outs),
+    buttons: [
+      { label: '取消' },
+      { label: '确定', cls: 'primary', onClick: apply }
+    ]
+  });
+  var body = mask.querySelector('.mbody');
+  var rerender = function () {
+    var sc = body.scrollTop;
+    body.innerHTML = multicastBodyHtml(port, outs);
+    body.scrollTop = sc;
+  };
+  function apply() {
+    if (isMirror(port)) return true;
+    var ok = applyPortMulticast(port, outs, !!opts.live);
+    if (ok && opts.onChange) opts.onChange();
+    return ok;
+  }
+  body.addEventListener('input', function (e) {
+    var t = e.target;
+    var i = t.getAttribute('data-mc');
+    if (i === null) return;
+    var f = t.getAttribute('data-f');
+    outs[Number(i)][f === 'address' ? 'address' : 'name'] = t.value;
+  });
+  body.addEventListener('click', function (e) {
+    var b;
+    if ((b = e.target.closest('[data-mc-add]'))) {
+      outs.push({ id: uid('mc'), address: '', name: '' });
+      rerender();
+      return;
+    }
+    if ((b = e.target.closest('[data-mc-del]'))) {
+      outs.splice(Number(b.getAttribute('data-mc-del')), 1);
+      rerender();
+    }
+  });
+}
+
+/* ---- 设备模板管理 ---- */
+function templateFormHtml(t) {
+  var html = '<div class="card">' +
+    '<div class="row"><label class="w120">模板名称</label><input type="text" class="grow" data-tf="name" value="' + esc(t.name) + '"></div>' +
+    '<div class="row"><label class="w120">类型标识</label><input type="text" class="grow" data-tf="type" value="' + esc(t.type) + '" placeholder="如 Net-Switch（转发类：Net-Switch / Ni / OTN）"></div>' +
+    '<div class="row"><label class="w120">描述</label><input type="text" class="grow" data-tf="description" value="' + esc(t.description) + '"></div>' +
+    '</div>';
+  html += '<div class="card"><h4>端口<span class="sp"></span><button class="ghost" data-tp-add="1">＋ 添加端口</button></h4>' +
+    '<table class="tbl"><thead><tr><th>#</th><th>端口号</th><th>类型</th><th>方向</th><th>双向</th><th></th></tr></thead><tbody>';
+  (t.ports || []).forEach(function (p, i) {
+    html += '<tr><td style="color:#64748b">' + (i + 1) + '</td>' +
+      '<td><input type="text" style="width:100%" data-tp="' + i + '" data-f="number" value="' + esc(p.number) + '"></td>' +
+      '<td><select style="width:100%" data-tp="' + i + '" data-f="type">' + portTypeOptions(p.type) + '</select></td>' +
+      '<td><select style="width:100%" data-tp="' + i + '" data-f="direction">' +
+        '<option value="in"' + (p.direction === 'in' ? ' selected' : '') + '>输入</option>' +
+        '<option value="out"' + (p.direction === 'out' ? ' selected' : '') + '>输出</option></select></td>' +
+      '<td><input type="checkbox" data-tp="' + i + '" data-f="bidi"' + (p.bidirectional ? ' checked' : '') + '></td>' +
+      '<td style="width:58px"><button class="mini danger" data-tp-del="' + i + '">删除</button></td></tr>';
+  });
+  if (!(t.ports || []).length) html += '<tr><td colspan="6" style="color:#64748b">暂无端口</td></tr>';
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function openTemplateEditor(tpl) {
+  var work = deep(tpl);
+  if (!work.id) work.id = uid('tpl');
+  var mask = modal({
+    title: tpl.id ? '编辑设备模板' : '新建设备模板',
+    size: 'wide',
+    body: templateFormHtml(work),
+    buttons: [
+      { label: '取消' },
+      {
+        label: '保存', cls: 'primary', onClick: function () {
+          if (!work.name.trim() || !work.type.trim()) { toast('模板名称与类型标识不能为空', 'warn'); return false; }
+          var dup = (lsGet(LS_TPL, []) || []).filter(function (x) { return x.type === work.type && x.id !== work.id; });
+          if (dup.length) { toast('类型标识「' + work.type + '」已被模板「' + dup[0].name + '」占用', 'warn'); return false; }
+          work.ports = (work.ports || []).map(function (p) { return { number: String(p.number), type: p.type, direction: p.direction, bidirectional: p.type === 'ip_port' ? true : !!p.bidirectional, program: '' }; });
+          var list = lsGet(LS_TPL, []);
+          if (tpl.id) {
+            var idx = -1;
+            list.forEach(function (x, i) { if (x.id === tpl.id) idx = i; });
+            if (idx >= 0) list[idx] = work; else list.push(work);
+          } else {
+            list.push(work);
+          }
+          lsSet(LS_TPL, list);
+          S.templates = list;
+          toast('模板已保存：' + work.name, 'ok');
+        }
+      }
+    ]
+  });
+  var body = mask.querySelector('.mbody');
+  var rerender = function () { body.innerHTML = templateFormHtml(work); };
+  body.addEventListener('input', function (e) {
+    var t = e.target, f = t.getAttribute('data-f');
+    var ti = t.getAttribute('data-tp');
+    if (ti !== null) {
+      var p = work.ports[Number(ti)];
+      if (!p) return;
+      if (f === 'number') p.number = t.value;
+      else if (f === 'type') { p.type = t.value; if (p.type === 'ip_port') p.bidirectional = true; }
+      else if (f === 'direction') p.direction = t.value;
+      else if (f === 'bidi') p.bidirectional = t.checked;
+      return;
+    }
+    var tf = t.getAttribute('data-tf');
+    if (tf) work[tf] = t.value;
+  });
+  body.addEventListener('change', function (e) {
+    var t = e.target, f = t.getAttribute('data-f'), ti = t.getAttribute('data-tp');
+    if (ti === null) return;
+    var p = work.ports[Number(ti)];
+    if (!p) return;
+    if (f === 'type') { p.type = t.value; if (p.type === 'ip_port') p.bidirectional = true; }
+    if (f === 'direction') p.direction = t.value;
+    if (f === 'bidi') p.bidirectional = t.checked;
+  });
+  body.addEventListener('click', function (e) {
+    var b;
+    if ((b = e.target.closest('[data-tp-add]'))) {
+      work.ports = work.ports || [];
+      work.ports.push({ number: String(work.ports.length + 1), type: 'ip_port', direction: 'out', bidirectional: true, program: '' });
+      rerender();
+      return;
+    }
+    if ((b = e.target.closest('[data-tp-del]'))) {
+      work.ports.splice(Number(b.getAttribute('data-tp-del')), 1);
+      rerender();
+    }
+  });
+}
+
+function normalizeTemplate(raw) {
+  var t = {
+    id: String(raw.id || uid('tpl')),
+    type: String(raw.type || '').trim(),
+    name: String(raw.name || '').trim(),
+    description: String(raw.description || ''),
+    ports: [],
+    inner_links: []
+  };
+  (Array.isArray(raw.ports) ? raw.ports : []).forEach(function (p, i) {
+    if (!p) return;
+    t.ports.push({
+      number: String(p.number === undefined ? i + 1 : p.number),
+      type: PORT_TYPES.indexOf(p.type) >= 0 ? p.type : 'ip_port',
+      direction: p.direction === 'in' ? 'in' : 'out',
+      bidirectional: p.type === 'ip_port' || p.bidirectional === true,
+      program: String(p.program || '')
+    });
+  });
+  (Array.isArray(raw.inner_links) ? raw.inner_links : []).forEach(function (l) {
+    if (l) t.inner_links.push({ from_port: String(l.from_port || ''), to_port: String(l.to_port || '') });
+  });
+  return t;
+}
+
+/** 导入设备模板 JSON（数组，或 {templates:[...]}）；同 type 已存在则跳过 */
+function importTemplates(file) {
+  var reader = new FileReader();
+  reader.onload = function () {
+    var list;
+    try {
+      var raw = JSON.parse(String(reader.result));
+      list = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.templates) ? raw.templates : [raw]);
+    } catch (err) {
+      toast('模板导入失败：文件不是合法 JSON', 'err');
+      return;
+    }
+    var lib = lsGet(LS_TPL, []);
+    var byType = {};
+    lib.forEach(function (t) { byType[t.type] = 1; });
+    var added = 0, skipped = 0;
+    list.forEach(function (item) {
+      if (!item || typeof item !== 'object') { skipped++; return; }
+      var tpl = normalizeTemplate(item);
+      if (!tpl.type || !tpl.name || byType[tpl.type]) { skipped++; return; }
+      byType[tpl.type] = 1;
+      lib.push(tpl);
+      added++;
+    });
+    if (!added) { toast('没有新增模板（' + skipped + ' 个已存在或无效）', 'warn'); return; }
+    lsSet(LS_TPL, lib);
+    S.templates = lib;
+    toast('已导入 ' + added + ' 个模板' + (skipped ? '，跳过 ' + skipped + ' 个' : ''), 'ok');
+    openTemplateManager();
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function openTemplateManager() {
+  var body = '';
+  if (!S.templates.length) body += '<div class="hintline">还没有模板</div>';
+  S.templates.forEach(function (t) {
+    body += '<div class="list-row"><div><div class="nm">' + esc(t.name) + ' <span class="tag">' + esc(t.type) + '</span></div>' +
+      '<div class="ds">' + esc(t.description || '') + ' · 端口 ' + (t.ports || []).length + '</div></div>' +
+      '<div class="sp"><button class="mini" data-tpl-edit="' + esc(t.id) + '">编辑</button>' +
+      '<button class="mini danger" data-tpl-del="' + esc(t.id) + '">删除</button></div></div>';
+  });
+  var mask = modal({
+    title: '设备模板', sub: '添加设备时可选', size: 'wide', body: body,
+    buttons: [
+      { label: '导入模板…', onClick: function () { setTimeout(function () { $('tplInput').click(); }, 0); } },
+      { label: '新建模板', cls: 'primary', onClick: function () { setTimeout(function () { openTemplateEditor({ type: '', name: '', description: '', ports: [], inner_links: [] }); }, 0); } },
+      { label: '关闭' }
+    ]
+  });
+  mask.addEventListener('click', function (e) {
+    var b;
+    if ((b = e.target.closest('[data-tpl-edit]'))) {
+      var tpl = templateById(b.getAttribute('data-tpl-edit'));
+      if (tpl) openTemplateEditor(tpl);
+      return;
+    }
+    if ((b = e.target.closest('[data-tpl-del]'))) {
+      var id = b.getAttribute('data-tpl-del');
+      var target = templateById(id);
+      confirmDialog('删除模板', '删除「' + esc(target ? target.name : id) + '」？已放到画布上的设备不受影响。', function () {
+        var list = lsGet(LS_TPL, []).filter(function (x) { return x.id !== id; });
+        lsSet(LS_TPL, list);
+        S.templates = list;
+        // 定时器里先关掉（自动关闭后）仍存在的模板管理器，再重开一份最新的
+        setTimeout(function () { closeModal(); openTemplateManager(); }, 0);
+      }, '删除');
+    }
+  });
+}
+
+/* ---- 图库 ---- */
+function openLibrary() {
+  var lib = lsGet(LS_LIB, []);
+  S.library = lib;
+  var body = '<div class="hintline">图保存在这台电脑的浏览器里（localStorage）。换电脑或清缓存前请先导出 JSON。</div>';
+  if (!lib.length) body += '<div class="fp-empty">图库还是空的。画完点右上角「保存」就会出现在这里。</div>';
+  lib.forEach(function (r) {
+    var d = new Date(r.updatedAt || Date.now());
+    var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+    body += '<div class="list-row"><div><div class="nm">' + esc(r.name) + '</div>' +
+      '<div class="ds">' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) +
+      ' · 设备 ' + ((r.graph && r.graph.devices) || []).length + '</div></div>' +
+      '<div class="sp"><button class="mini" data-lib-open="' + esc(r.id) + '">打开</button>' +
+      '<button class="mini danger" data-lib-del="' + esc(r.id) + '">删除</button></div></div>';
+  });
+  var mask = modal({
+    title: '图库', sub: lib.length + ' 张图', body: body,
+    buttons: [
+      { label: '载入示例', onClick: function () { setTimeout(openDemo, 0); } },
+      { label: '另存当前为新图', onClick: function () { setTimeout(saveAsNew, 0); } },
+      { label: '关闭' }
+    ]
+  });
+  mask.addEventListener('click', function (e) {
+    var b;
+    if ((b = e.target.closest('[data-lib-open]'))) {
+      var rec = lib.filter(function (x) { return x.id === b.getAttribute('data-lib-open'); })[0];
+      if (rec) { closeModal(); openDoc(rec); }
+      return;
+    }
+    if ((b = e.target.closest('[data-lib-del]'))) {
+      var id = b.getAttribute('data-lib-del');
+      var rec2 = lib.filter(function (x) { return x.id === id; })[0];
+      confirmDialog('删除图', '删除图库里的「' + esc(rec2 ? rec2.name : id) + '」？此操作不可撤销。', function () {
+        var next = lsGet(LS_LIB, []).filter(function (x) { return x.id !== id; });
+        lsSet(LS_LIB, next);
+        if (S.doc.id === id) S.doc.id = null;
+        setTimeout(function () { closeModal(); openLibrary(); }, 0);
+        toast('已删除', 'ok');
+      }, '删除');
+    }
+  });
+}
+
+/* ============================================================================
+ * 画布交互：拖拽 / 平移 / 缩放 / 连线 / 右键菜单
+ * ========================================================================= */
+function onCanvasPointerDown(e) {
+  hideMenu();
+  if (e.button === 2) return;
+  var t = e.target;
+
+  var portEl = t.closest ? t.closest('[data-port]') : null;
+  if (portEl) {
+    var ref = parsePortAttr(portEl.getAttribute('data-port'));
+    if (!ref) return;
+    e.preventDefault();
+    // 双击端口 = 打开组播配置。画布每次点击都会重绘，原生 dblclick 在元素被替换后不可靠，
+    // 因此自己按「两次 pointerdown 同端口且间隔 < 320ms」判定。
+    var now = Date.now(), key = ref.device + ':' + ref.port;
+    var last = S.view.lastPortDown;
+    if (last && last.key === key && now - last.t < 320) {
+      S.view.lastPortDown = null;
+      var found = portByRef(ref.device, ref.port);
+      if (found && isBidi(found.port)) { openMulticastModal(found.port, { live: true }); return; }
+    }
+    S.view.lastPortDown = { key: key, t: now };
+
+    S.view.selectedDevice = ref.device;
+    S.drag = { type: 'wire', from: ref, startX: e.clientX, startY: e.clientY, moved: false };
+    renderAll();
+    return;
+  }
+
+  var devEl = t.closest ? t.closest('[data-dev]') : null;
+  if (devEl) {
+    var dev = deviceById(devEl.getAttribute('data-dev'));
+    if (!dev) return;
+    e.preventDefault();
+    S.view.selectedDevice = dev.id;
+    if (S.view.mode === 'relation') {         // 关系图是只读视图：坐标现算，不写回 layout
+      S.drag = null;
+      renderAll();
+      return;
+    }
+    var pos = S.doc.layout.nodes[dev.id] || autoPosition();
+    S.drag = { type: 'node', id: dev.id, startX: e.clientX, startY: e.clientY, ox: pos.x, oy: pos.y, moved: false };
+    renderAll();
+    return;
+  }
+
+  // 空白处：平移画布 + 取消选中
+  S.view.selectedDevice = '';
+  S.drag = {
+    type: 'pan', startX: e.clientX, startY: e.clientY,
+    camX: S.view.cam.x, camY: S.view.cam.y, moved: false
+  };
+  renderAll();
+}
+
+function parsePortAttr(value) {
+  if (!value) return null;
+  var parts = String(value).split('|');
+  if (parts.length !== 2) return null;
+  return { device: parts[0], port: parts[1] };
+}
+
+function onPointerMove(e) {
+  var d = S.drag;
+  if (!d) return;
+  var dx = e.clientX - d.startX, dy = e.clientY - d.startY;
+  if (!d.moved && Math.abs(dx) + Math.abs(dy) > 3) d.moved = true;
+
+  if (d.type === 'pan') {
+    S.view.cam.x = d.camX - dx / S.view.cam.zoom;
+    S.view.cam.y = d.camY - dy / S.view.cam.zoom;
+    renderCanvas();
+    return;
+  }
+  if (d.type === 'node') {
+    if (!d.moved) return;
+    var pos = { x: Math.round(d.ox + dx / S.view.cam.zoom), y: Math.round(d.oy + dy / S.view.cam.zoom) };
+    S.doc.layout.nodes[d.id] = pos;
+    renderCanvas();
+    return;
+  }
+  if (d.type === 'wire') {
+    var s = portPointById(d.from.device, d.from.port);
+    var preview = $('wirePreview');
+    if (!s || !preview) return;
+    var w = worldFromScreen(e.clientX, e.clientY);
+    var geo = bezierOf(s, { x: w.x, y: w.y, side: w.x < s.x ? -1 : 1 }, 0, 0);
+    preview.setAttribute('d', geo.d);
+  }
+}
+
+function onPointerUp(e) {
+  var d = S.drag;
+  S.drag = null;
+  if (!d) return;
+
+  if (d.type === 'pan') {
+    // 没移动 = 点击：命中连线则删除（画布每次 pointerdown 都重绘，原生 click 不可靠，故在 pointerup 判定）
+    if (!d.moved && S.view.mode !== 'relation') {
+      var hit = document.elementFromPoint(e.clientX, e.clientY);
+      var linkEl = hit && hit.closest ? hit.closest('[data-link]') : null;
+      var sigEl = hit && hit.closest ? hit.closest('[data-sig]') : null;
+      if (linkEl) deletePhysicalLink(linkEl.getAttribute('data-link'));
+      else if (sigEl) deleteSignalLink(sigEl.getAttribute('data-sig'));
+    }
+    return;
+  }
+
+  if (d.type === 'node') {
+    if (d.moved) {
+      S.dirty = true;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(persistCurrent, 350);
+      renderAll();
+    }
+    return;
+  }
+
+  if (d.type === 'wire') {
+    if (!d.moved) {
+      // 单击端口：路由视图下用于"选流 → 点目标口"
+      if (S.view.mode === 'routing') handlePortClick(d.from.device, d.from.port);
+      renderAll();
+      return;
+    }
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    var portEl = el && el.closest ? el.closest('[data-port]') : null;
+    var target = portEl ? parsePortAttr(portEl.getAttribute('data-port')) : null;
+    if (!target || (target.device === d.from.device && target.port === d.from.port)) { renderAll(); return; }
+    if (S.view.mode === 'physical') connect(d.from, target);
+    else connectSignalByDrag(d.from, target);
+    renderAll();
+  }
+}
+
+function onWheel(e) {
+  e.preventDefault();
+  zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+}
+
+function onContextMenu(e) {
+  e.preventDefault();
+  hideMenu();
+  var t = e.target;
+  var devEl = t.closest ? t.closest('[data-dev]') : null;
+  if (devEl) {
+    var dev = deviceById(devEl.getAttribute('data-dev'));
+    if (!dev) return;
+    S.view.selectedDevice = dev.id;
+    renderAll();
+    showMenu(e.clientX, e.clientY, [
+      { title: dev.name },
+      { label: '编辑设备…', onClick: function () { openDeviceEditor(dev.id); } },
+      { sep: true },
+      { label: '删除设备', danger: true, onClick: function () {
+        confirmDialog('删除设备', '确定删除「' + esc(dev.name) + '」？其全部连线将一并删除。', function () {
+          removeDevice(dev.id);
+          toast('已删除设备', 'ok');
+        }, '删除');
+      } }
+    ]);
+    return;
+  }
+
+  var world = worldFromScreen(e.clientX, e.clientY);
+  var items = [{ title: '添加设备' }];
+  S.templates.forEach(function (tpl) {
+    items.push({
+      label: tpl.name + '（' + tpl.type + '）',
+      onClick: function () {
+        var dev2 = addDevice(tpl, world);
+        if (dev2) { S.view.selectedDevice = dev2.id; renderAll(); toast('已添加：' + dev2.name, 'ok'); }
+      }
+    });
+  });
+  items.push({ sep: true });
+  items.push({ label: '添加设备…', onClick: openAddDeviceDialog });
+  items.push({ label: '整理布局', onClick: tidyLayout });
+  items.push({ label: '适应画布', onClick: function () { fitView(); } });
+  items.push({ sep: true });
+  items.push({ label: '设备模板…', onClick: openTemplateManager });
+  items.push({ label: '图库…', onClick: openLibrary });
+  showMenu(e.clientX, e.clientY, items);
+}
+
+
+/* ============================================================================
+ * 事件绑定与启动
+ * ========================================================================= */
+function onKeyDown(e) {
+  var t = e.target;
+  var typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+  if (e.key === 'Escape') {
+    hideMenu();
+    if (S.modalStack.length) { closeModal(); return; }
+    if (S.view.armed || S.view.picking) { disarm(); return; }
+    S.view.selectedDevice = '';
+    renderAll();
+    return;
+  }
+  if (e.ctrlKey || e.metaKey) {
+    // 用 e.code 判断物理键：中文输入法激活时 e.key 是 "Process"
+    var code = e.code;
+    if (code === 'KeyZ' || e.keyCode === 90) {
+      if (typing) return;
+      e.preventDefault();
+      if (e.shiftKey) { if (redo()) toast('已重做', 'ok'); }
+      else if (undo()) toast('已撤销', 'ok');
+      else toast('没有可撤销的操作', 'warn');
+      return;
+    }
+    if (code === 'KeyY' || e.keyCode === 89) {
+      if (typing) return;
+      e.preventDefault();
+      if (redo()) toast('已重做', 'ok'); else toast('没有可重做的操作', 'warn');
+      return;
+    }
+    if (code === 'KeyS' || e.keyCode === 83) {
+      e.preventDefault();
+      saveToLibrary();
+      return;
+    }
+  }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && !typing && S.view.selectedDevice) {
+    var dev = deviceById(S.view.selectedDevice);
+    if (dev) {
+      e.preventDefault();
+      confirmDialog('删除设备', '确定删除「' + esc(dev.name) + '」？其全部连线将一并删除。', function () {
+        removeDevice(dev.id);
+        toast('已删除设备', 'ok');
+      }, '删除');
+    }
+  }
+}
+
+function bindEvents() {
+  var canvas = $('canvas');
+  canvas.addEventListener('pointerdown', onCanvasPointerDown);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+  canvas.addEventListener('contextmenu', onContextMenu);
+
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('resize', function () { renderCanvas(); });
+
+  // 顶栏
+  $('zoomCtl').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-zoom]');
+    if (!b) return;
+    var action = b.getAttribute('data-zoom');
+    if (action === 'fit') { fitView(); return; }
+    if (action === 'reset') { setZoom(1); return; }
+    zoomAtCenter(action === 'in' ? 1.2 : 1 / 1.2);
+  });
+
+  var demoBtn = document.querySelector('[data-demo]');
+  if (demoBtn) demoBtn.addEventListener('click', function () { openDemo(); });
+
+  $('btnUndo').addEventListener('click', function () { if (undo()) toast('已撤销', 'ok'); });
+  $('btnRedo').addEventListener('click', function () { if (redo()) toast('已重做', 'ok'); });
+  $('btnFit').addEventListener('click', function () { fitView(); });
+  $('btnTidy').addEventListener('click', tidyLayout);
+  $('btnTpl').addEventListener('click', openTemplateManager);
+  $('btnLib').addEventListener('click', openLibrary);
+  $('btnAdd').addEventListener('click', openAddDeviceDialog);
+  $('btnSave').addEventListener('click', saveToLibrary);
+  $('btnExport').addEventListener('click', exportJson);
+  $('btnImport').addEventListener('click', function () { $('fileInput').click(); });
+  $('fileInput').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (f) importFile(f);
+    e.target.value = '';
+  });
+  $('tplInput').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (f) importTemplates(f);
+    e.target.value = '';
+  });
+  $('graphName').addEventListener('input', function (e) {
+    S.doc.name = e.target.value;
+    S.doc.graph.name = e.target.value;
+    S.dirty = true;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(persistCurrent, 350);
+  });
+  $('viewSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-mode]');
+    if (b) switchMode(b.getAttribute('data-mode'));
+  });
+
+  // 流面板 / 选流条（事件委托，内容随时重绘）
+  $('flowPanel').addEventListener('click', function (e) {
+    if (e.target.closest('[data-flow-all]')) { S.view.selectedFlow = ''; renderAll(); return; }
+    var f = e.target.closest('[data-flow]');
+    if (f) {
+      var addr = f.getAttribute('data-flow');
+      S.view.selectedFlow = S.view.selectedFlow === addr ? '' : addr;
+      renderAll();
+    }
+  });
+  $('connectBar').addEventListener('click', function (e) {
+    if (e.target.closest('[data-pick-cancel]') || e.target.closest('[data-arm-cancel]')) { disarm(); return; }
+    var b = e.target.closest('[data-pick]');
+    if (b && S.view.picking) {
+      var found = portByRef(S.view.picking.deviceId, S.view.picking.portId);
+      var entry = found && (found.port.multicast_out || [])[Number(b.getAttribute('data-pick'))];
+      if (entry) selectStream(entry);
+    }
+  });
+
+  // 菜单点击
+  $('menu').addEventListener('click', function (e) {
+    var mi = e.target.closest('[data-mi]');
+    if (!mi) return;
+    var item = ($('menu').__items || [])[Number(mi.getAttribute('data-mi'))];
+    hideMenu();
+    if (item && !item.disabled && item.onClick) item.onClick();
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#menu') && !e.target.closest('#canvas')) hideMenu();
+  });
+}
+
+function boot() {
+  // 模板：没有就灌种子
+  var tpls = lsGet(LS_TPL, null);
+  if (!Array.isArray(tpls) || !tpls.length) {
+    tpls = seedTemplates();
+    lsSet(LS_TPL, tpls);
+  }
+  S.templates = tpls;
+  S.library = lsGet(LS_LIB, []);
+
+  var cur = lsGet(LS_CUR, null);
+  var ui = lsGet(LS_UI, { mode: 'physical' });
+  if (cur && cur.doc && cur.doc.graph && Array.isArray(cur.doc.graph.devices)) {
+    try {
+      S.doc = normalizeDoc(cur.doc);
+      S.doc.id = cur.doc.id || null;
+      S.doc.name = cur.doc.name || '未命名信号图';
+      S.view.mode = cur.mode || ui.mode || 'physical';
+    } catch (err) {
+      S.doc = emptyDoc();
+    }
+  } else {
+    S.doc = emptyDoc();
+    S.view.mode = ui.mode || 'physical';
+  }
+  $('graphName').value = S.doc.name;
+  if (S.view.mode === 'physical' && suggestedMode(S.doc) === 'routing') S.view.mode = 'routing';
+
+  bindEvents();
+  applyViewMode();
+  markSaved();
+
+  window.addEventListener('error', function (ev) {
+    var box = $('bootError');
+    box.classList.remove('hidden');
+    box.textContent = '脚本错误：' + (ev.message || ev.error);
+  });
+}
+
+boot();
+
+/* 调试/自动化钩子：只暴露引用，不改变业务逻辑（供测试脚本与本地排障使用） */
+window.__SF__ = {
+  S: S,
+  doc: function () { return S.doc; },
+  devices: devices,
+  links: links,
+  flows: function () { return allFlows(); },
+  trace: function () { return traceSignals(); },
+  addDevice: addDevice,
+  removeDevice: removeDevice,
+  updateDevice: updateDevice,
+  connect: connect,
+  connectSignal: connectSignal,
+  snapshot: snapshot,
+  undo: undo,
+  redo: redo,
+  openDemo: openDemo,
+  saveToLibrary: saveToLibrary,
+  render: renderAll,
+  templates: function () { return S.templates; },
+  normalizeDoc: normalizeDoc,
+  importDocs: importDocs,
+  importTemplates: importTemplates,
+  normalizeTemplate: normalizeTemplate,
+  geom: function (id) { var d = deviceById(id); return d ? nodeGeom(d) : null; },
+  portPoint: portPointById,
+  fitView: fitView
+};
+
+})();
+</script>
+</body>
+</html>
