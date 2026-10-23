@@ -19,6 +19,8 @@ git clone https://github.com/agamecat/systemflow.git
 cd systemflow && open sysflow.html        # macOS；Windows 直接双击文件，Linux 用 xdg-open
 ```
 
+不想 clone？**在线试用**：<https://agamecat.github.io/systemflow/>
+
 没有 `npm install`、没有构建、没有后端。仓库自带一份**脱敏的示例图**（7 台设备 / 6 条光纤 / 3 路组播，全部虚构）：
 打开后点「导入」选 `data/sample-system-diagram.json`，或直接点空画布上的「载入示例」。
 
