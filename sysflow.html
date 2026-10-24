@@ -1337,22 +1337,28 @@ function portPointById(devId, portId) { return portPoint({ device: devId, port: 
 
 /* ============================================================================
  * 连线几何：端口到端口的水平三次贝塞尔
- * - 控制点只横向偏移（端口都在左右两侧），保证线从端口"长出"而不是斜插
- * - 同端口多线：控制点沿垂直法线错开，两端仍精确落在端口上（扇形/汇聚）
+ * - 控制点只横向离开端口（端口都在左右两侧），保证线从端口"长出"而不是斜插
+ * - 同端口多线：控制点沿卡片纵向错开（扇形/汇聚），两端仍精确落在端口上；
+ *   偏移不越过端口的横向位置，曲线不会绕进设备卡片背后
  * ========================================================================= */
 var FAN_SPACING = 18;
 var CTRL_SCALE = 4 / 3;
 
 function bezierOf(s, t, fromOff, toOff) {
   var dx = t.x - s.x, dy = t.y - s.y;
+  // 线法线：只用于标签沿线的垂直微移，不参与控制点偏移
   var px = -dy, py = dx;
   if (dx < 0 || (dx === 0 && dy < 0)) { px = -px; py = -py; }
   var len = Math.sqrt(px * px + py * py) || 1;
   px /= len; py /= len;
   var dist = Math.sqrt(dx * dx + dy * dy);
   var curv = Math.max(dist * 0.25, 40);
-  var c1 = { x: s.x + s.side * curv + px * (fromOff || 0) * CTRL_SCALE, y: s.y + py * (fromOff || 0) * CTRL_SCALE };
-  var c2 = { x: t.x + t.side * curv + px * (toOff || 0) * CTRL_SCALE, y: t.y + py * (toOff || 0) * CTRL_SCALE };
+  // 控制点永远横向离开端口（side 方向），扇形偏移只沿卡片纵向展开。
+  // 不能按"线方向法线"偏移：多路汇聚同一口时偏移量可达上百像素，陡峭连线的
+  // 法线几乎水平，会把控制点推过端口、曲线绕到设备卡片背后再折回
+  // （曾见于演播室图 切换台 1A：8 收 + 8 发共 16 个线端）。
+  var c1 = { x: s.x + s.side * curv, y: s.y + (fromOff || 0) * CTRL_SCALE };
+  var c2 = { x: t.x + t.side * curv, y: t.y + (toOff || 0) * CTRL_SCALE };
   return {
     d: 'M ' + s.x.toFixed(1) + ',' + s.y.toFixed(1) +
        ' C ' + c1.x.toFixed(1) + ',' + c1.y.toFixed(1) +

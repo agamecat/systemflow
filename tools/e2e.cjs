@@ -559,6 +559,35 @@ function httpJson(url) {
   check('P3-3: 被追踪的信号连线只画一次（flow 覆盖层不与 sig 段重复）',
     renderOnce.flow === 0 && renderOnce.sig === 2 && renderOnce.tracedSigLinks === 1, renderOnce);
 
+  // 9) 陡峭汇聚扇形：控制点不得越过端口（曲线不得绕进设备卡片背后）
+  //    （曾见于演播室图：切换台 1A 挂 8 收 + 8 发共 16 个线端，法线偏移把控制点推进卡片内侧）
+  const fanGeom = await ev(`(function(){
+    var g=__SF__.S.doc.graph, lay=__SF__.S.doc.layout.nodes;
+    for(var i=1;i<=8;i++){
+      var id='rg_v'+i, addr='udp://239.9.8.'+i+':5000';
+      g.devices.push({id:id,name:'V'+i,type:'Encoder',inner_links:[],sparse_ports:false,ports:[
+        {id:id+'_p1',number:'1',type:'ip_port',direction:'out',bidirectional:true,program:'',
+         multicast_in:[],multicast_out:[{id:id+'_m',address:addr,name:'V'+i}]}]});
+      lay[id]={x:470,y:80+55*i};
+      __SF__.S.view.armed={deviceId:id,portId:id+'_p1',address:addr,name:'V'+i};
+      __SF__.connectSignal('rg_dst','rg_p2');
+    }
+    __SF__.fitView(true); __SF__.render();
+    var n=0, bad=0, worst=0;
+    document.querySelectorAll('#svg path.edge.sig').forEach(function(p){
+      var nums=(p.getAttribute('d').match(/-?[\\d.]+/g)||[]).map(Number);
+      if(nums.length!==8) return;
+      n++;
+      // M x0,y0 C x1,y1 x2,y2 x3,y3：源口在卡片右缘(控制点应向右)、目标口在左缘(控制点应向左)
+      var over=Math.max(nums[0]-nums[2], nums[4]-nums[6]);
+      if(over>worst) worst=over;
+      if(nums[2]<nums[0]-0.5 || nums[4]>nums[6]+0.5) bad++;
+    });
+    return {n:n, bad:bad, worst:worst};
+  })()`);
+  check('P3-4: 陡峭汇聚扇形的控制点不越过端口（曲线不绕卡片背后）',
+    fanGeom.n === 10 && fanGeom.bad === 0 && fanGeom.worst <= 0, fanGeom);
+
   // ==========================================================================
   const failed = checks.filter((c) => !c.pass);
   console.log('\n==== 结果 ====');
