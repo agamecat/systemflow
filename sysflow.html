@@ -1424,13 +1424,16 @@ function buildSegments() {
     var byAddr = {};
     flows.forEach(function (f) { byAddr[f.address] = f; });
 
-    // 1) 物理路径上的流（trace 命中的物理连线，断路段不画）
+    // 1) 物理路径上的流（trace 命中的物理连线，断路段不画）。
+    //    信号连线跳过：下一段会按连线本体直接画（同流色/同标签/可点删），这里再画一遍
+    //    会导致同一条线出现两根平行曲线（fan 偏移还会把它们错开）。
     flows.forEach(function (f) {
       var color = flowColor(f.address);
       f.paths.forEach(function (p) {
         p.linkIds.forEach(function (id) {
           var l = linkById(id);
           if (!l) return;
+          if (l.kind === 'signal') return;       // 由第 2 段负责，避免双重绘制
           if (isBPortRef(l.from) || isBPortRef(l.to)) return;   // B 口线不画
           segs.push({
             kind: 'flow', from: l.from, to: l.to, color: color,

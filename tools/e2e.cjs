@@ -541,6 +541,24 @@ function httpJson(url) {
       afterDel.remain === 1 && afterDel.kept === 1, afterDel);
   }
 
+  // 8) 被追踪的信号连线只渲染一次：流覆盖层（edge.flow）不得与信号连线段（edge.sig）重复绘制
+  //    （曾导致同一端口间 1 收 1 发显示成 4 根平行线）
+  const renderOnce = await ev(`(function(){
+    var ADDR='udp://239.9.9.1:5000';
+    __SF__.S.view.armed={deviceId:'rg_src',portId:'rg_p1a',address:ADDR,name:'RG'};
+    __SF__.connectSignal('rg_dst','rg_p2');
+    document.querySelector('#viewSeg button[data-mode=routing]').click();
+    var traced=__SF__.trace().filter(function(f){return f.address===ADDR;})[0];
+    var tracedSigLinks=(traced&&traced.paths||[]).reduce(function(n,p){return n+p.linkIds.length;},0);
+    return {
+      sig:document.querySelectorAll('#svg path.edge.sig').length,
+      flow:document.querySelectorAll('#svg path.edge.flow').length,
+      tracedSigLinks:tracedSigLinks
+    };
+  })()`);
+  check('P3-3: 被追踪的信号连线只画一次（flow 覆盖层不与 sig 段重复）',
+    renderOnce.flow === 0 && renderOnce.sig === 2 && renderOnce.tracedSigLinks === 1, renderOnce);
+
   // ==========================================================================
   const failed = checks.filter((c) => !c.pass);
   console.log('\n==== 结果 ====');
