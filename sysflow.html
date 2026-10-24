@@ -684,12 +684,16 @@ function followRenames(port, prevOuts) {
     for (var i = 0; i < port.multicast_out.length; i++) {
       if (port.multicast_out[i].id && port.multicast_out[i].id === prev.id) { cur = port.multicast_out[i]; break; }
     }
-    if (!cur || cur.address === prev.address) return;
-    links().forEach(function (l) { if (l.stream === prev.address) l.stream = cur.address; });
+    if (!cur) return;
+    var addrChanged = cur.address !== prev.address;
+    var nameChanged = String(cur.name || '') !== String(prev.name || '');
+    if (!addrChanged && !nameChanged) return;
+    if (addrChanged) links().forEach(function (l) { if (l.stream === prev.address) l.stream = cur.address; });
     devices().forEach(function (d) {
       d.ports.forEach(function (p) {
         (p.multicast_in || []).forEach(function (m) {
-          if (m.address === prev.address) { m.address = cur.address; m.name = cur.name; }
+          if (addrChanged && m.address === prev.address) { m.address = cur.address; m.name = cur.name; }
+          else if (!addrChanged && m.address === cur.address && m.name !== cur.name) { m.name = cur.name; }
         });
       });
     });
@@ -782,6 +786,7 @@ function traceSignals() {
       if (FORWARDERS[d.type]) return;
       d.ports.forEach(function (p) {
         if (isMirror(p)) return;
+        if (p.type !== 'ip_port') return;                 // 非 IP 口即便有残留组播也不作流源
         if (portHasFlow(p, address, 'out')) origins.push({ device: d, port: p });
       });
     });
@@ -938,9 +943,79 @@ function removeDevice(id) {
 function updateDevice(id, next) {
   var idx = -1;
   devices().forEach(function (d, i) { if (d.id === id) idx = i; });
-  if (idx < 0) return;
-  snapshot();
+  if (idx < 0) return false;
   var prev = devices()[idx];
+
+  // ---- 提交前统一校验（schema.md 承诺的三条）----
+  var nm = String(next.name || '').trim();
+  if (!nm) { toast('设备名不能为空', 'warn'); return false; }
+  if (devices().some(function (d) { return d.id !== id && d.name === nm; })) {
+    toast('设备名「' + nm + '」已被其他设备占用', 'warn'); return false;
+  }
+  next.name = nm;
+
+  var seenNum = {}, badNum = '';
+  (next.ports || []).forEach(function (p) {
+    var num = String(p.number === undefined ? '' : p.number).trim();
+    if (!num) { badNum = '端口编号不能为空'; return; }
+    // mirrorBPortsIn 与 inner_links 都按 number 索引，同设备内必须唯一（不分方向）
+    if (seenNum[num]) { badNum = '端口编号「' + num + '」重复'; return; }
+    seenNum[num] = 1;
+  });
+  if (badNum) { toast(badNum, 'warn'); return false; }
+
+  // 一个组播地址只能有一个"源"：只对非转发设备校验。
+  // 转发设备（Net-Switch / Ni / OTN）的入出口本来就重复声明同一地址，是合法形态（见 schema.md）。
+  if (!FORWARDERS[next.type]) {
+    var addrOwner = {};
+    devices().forEach(function (d) {
+      if (d.id === id || FORWARDERS[d.type]) return;
+      d.ports.forEach(function (p) {
+        if (isMirror(p)) return;
+        (p.multicast_out || []).forEach(function (m) {
+          if (m.address) addrOwner[m.address] = d.name + ' 口' + p.number;
+        });
+      });
+    });
+    var badAddr = '';
+    (next.ports || []).forEach(function (p) {
+      if (isMirror(p)) return;
+      (p.multicast_out || []).forEach(function (m) {
+        var a = String(m.address || '').trim();
+        if (!a) return;
+        if (addrOwner[a]) badAddr = '组播地址 ' + a + ' 已被 ' + addrOwner[a] + ' 占用（一个地址只能有一个发送端）';
+        else addrOwner[a] = nm + ' 口' + p.number;
+      });
+    });
+    if (badAddr) { toast(badAddr, 'warn'); return false; }
+  }
+
+  // 端口改成非 IP 类型时，组播配置没有意义：一并清掉，避免残留成"幽灵流源"
+  var clearedMc = 0;
+  (next.ports || []).forEach(function (p) {
+    if (p.type === 'ip_port') return;
+    clearedMc += (p.multicast_out || []).length + (p.multicast_in || []).length;
+    p.multicast_out = [];
+    p.multicast_in = [];
+  });
+
+  // 端口改号：同设备内 inner_links 按旧号 → 新号同步映射，避免指向幽灵端口
+  var numMap = {};
+  (prev.ports || []).forEach(function (pp) {
+    var np = null;
+    for (var k = 0; k < (next.ports || []).length; k++) if (next.ports[k].id === pp.id) { np = next.ports[k]; break; }
+    if (np && String(np.number) !== String(pp.number)) numMap[String(pp.number)] = String(np.number);
+  });
+  if (Object.keys(numMap).length) {
+    next.inner_links = (next.inner_links || []).map(function (il) {
+      return {
+        from_port: numMap[il.from_port] || il.from_port,
+        to_port: numMap[il.to_port] || il.to_port
+      };
+    });
+  }
+
+  snapshot();
   var renames = [];
   prev.ports.forEach(function (pp) {
     var np = null;
@@ -959,6 +1034,8 @@ function updateDevice(id, next) {
   cleanOrphanReceivers();
   mirrorBPorts();
   afterChange();
+  if (clearedMc) toast('已清空 ' + clearedMc + ' 条非 IP 端口的组播配置', 'warn');
+  return true;
 }
 
 /** 物理连线：校验 + 1口1线顶替（只顶替物理连线，不动信号连线） */
@@ -998,7 +1075,7 @@ function deletePhysicalLink(linkId) {
 
 /* ---- 信号连线（IP 路由视图） ---- */
 function startPicking(deviceId, portId) { S.view.picking = { deviceId: deviceId, portId: portId }; S.view.armed = null; renderChrome(); }
-function cancelPicking() { S.view.picking = null; S.view.armed = null; renderChrome(); }
+function cancelPicking() { S.view.picking = null; S.view.armed = null; renderAll(); }
 function selectStream(entry) {
   if (!S.view.picking) return;
   S.view.armed = {
@@ -1008,13 +1085,14 @@ function selectStream(entry) {
   S.view.picking = null;
   renderChrome();
 }
-function disarm() { S.view.picking = null; S.view.armed = null; renderChrome(); }
+function disarm() { S.view.picking = null; S.view.armed = null; renderAll(); }
 
 /** 路由视图：点击 IP 口 —— 已选流则完成连接；未选流且该口有输出组播则弹出选流 */
 function handlePortClick(deviceId, portId) {
   if (S.view.mode !== 'routing') return;
   var found = portByRef(deviceId, portId);
   if (!found || found.port.type !== 'ip_port' || !isBidi(found.port)) return;
+  if (isMirror(found.port)) { toast('B 口是 A 口的镜像，请在同号 A 口操作', 'warn'); return; }
   if (S.view.armed) { connectSignal(deviceId, portId); return; }
   if (!(found.port.multicast_out || []).length) return;
   startPicking(deviceId, portId);
@@ -1023,11 +1101,15 @@ function handlePortClick(deviceId, portId) {
 function connectSignal(targetDeviceId, targetPortId) {
   var armed = S.view.armed;
   if (!armed) { toast('请先在源端口选择一路输出组播', 'warn'); return false; }
+  var src = portByRef(armed.deviceId, armed.portId);
+  if (!src) { disarm(); toast('源端口不存在', 'warn'); return false; }
+  if (isMirror(src.port)) { disarm(); toast('B 口是 A 口的镜像，请在同号 A 口操作', 'warn'); return false; }
   if (armed.deviceId === targetDeviceId && armed.portId === targetPortId) { disarm(); return true; }
   if (armed.deviceId === targetDeviceId) { toast('不能连接同一设备', 'warn'); return false; }
   var target = portByRef(targetDeviceId, targetPortId);
   if (!target) { toast('目标端口不存在', 'warn'); return false; }
   if (target.port.type !== 'ip_port' || !isBidi(target.port)) { toast('目标必须是 IP 端口', 'warn'); return false; }
+  if (isMirror(target.port)) { toast('B 口是 A 口的镜像，请在同号 A 口操作', 'warn'); return false; }
 
   var exists = links().some(function (l) {
     return l.kind === 'signal' && l.stream === armed.address &&
@@ -1057,6 +1139,7 @@ function connectSignal(targetDeviceId, targetPortId) {
 function connectSignalByDrag(from, to) {
   var src = portByRef(from.device, from.port);
   if (!src || src.port.type !== 'ip_port') { toast('IP 路由视图下仅支持 IP 口之间的信号连线', 'warn'); return false; }
+  if (isMirror(src.port)) { toast('B 口是 A 口的镜像，请在同号 A 口操作', 'warn'); return false; }
   var outs = src.port.multicast_out || [];
   if (!outs.length) { toast('该端口没有输出组播（双击端口可配置），无法建立信号连线', 'warn'); return false; }
   var entry = null;
@@ -1337,7 +1420,7 @@ function buildSegments() {
       if (l.kind !== 'signal' || !l.stream) return;
       if (S.view.selectedFlow && l.stream !== S.view.selectedFlow) return;
       if (isBPortRef(l.from) || isBPortRef(l.to)) return;
-      var f = byAddr[l.stream] || allFlows().filter(function (x) { return x.address === l.stream; })[0];
+      var f = byAddr[l.stream];
       segs.push({
         kind: 'sig', sigId: l.id, from: l.from, to: l.to,
         color: flowColor(l.stream), label: showLabels ? ((f && f.name) || l.stream) : '', width: 3, dash: '8 4'
@@ -1911,10 +1994,14 @@ function normalizeDoc(raw) {
     };
     if (idMap[dev.id]) dev.id = dev.id + '_' + i;
     idMap[dev.id] = 1;
+    var pidMap = {};
     (Array.isArray(d.ports) ? d.ports : []).forEach(function (p, k) {
       if (!p) return;
+      var pid = String(p.id || uid('p'));
+      if (pidMap[pid]) pid = pid + '_' + k;        // 同设备内重复端口 id 去重（同 id 会被 portByRef 取第一个）
+      pidMap[pid] = 1;
       dev.ports.push({
-        id: String(p.id || uid('p')),
+        id: pid,
         number: String(p.number === undefined ? k + 1 : p.number),
         type: PORT_TYPES.indexOf(p.type) >= 0 ? p.type : 'ip_port',
         direction: p.direction === 'in' ? 'in' : 'out',
@@ -1939,6 +2026,7 @@ function normalizeDoc(raw) {
   doc.graph.devices.forEach(function (d) { byId[d.id] = d; });
   (Array.isArray(src.links) ? src.links : []).forEach(function (l) {
     if (!l || !l.from || !l.to) return;
+    if (l.kind === 'signal' && !String(l.stream || '').trim()) return;   // 无流标识的信号连线 = 不可见死数据
     var f = byId[l.from.device], t = byId[l.to.device];
     if (!f || !t) return;
     var hasPort = function (dev, pid) { return dev.ports.some(function (p) { return p.id === pid; }); };
@@ -1999,6 +2087,7 @@ function saveAsNew() {
   var name = (S.doc.name || '未命名信号图') + ' 副本';
   S.doc.id = null;
   S.doc.name = name;
+  S.undo = []; S.redo = [];                    // 另存即换 id，旧历史不能回灌到新副本
   $('graphName').value = name;
   saveToLibrary();
 }
@@ -2044,7 +2133,8 @@ function exportJson() {
   var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = (S.doc.name || 'sysflow') + '.json';
+  var fname = String(S.doc.name || 'sysflow').replace(/[\\/:*?"<>|\r\n\t]+/g, '_').slice(0, 80) || 'sysflow';
+  a.download = fname + '.json';
   document.body.appendChild(a);
   a.click();
   setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
@@ -2056,7 +2146,7 @@ function importFile(file) {
   reader.onload = function () {
     var list;
     try {
-      var raw = JSON.parse(String(reader.result));
+      var raw = JSON.parse(String(reader.result).replace(/^\uFEFF/, ''));
       list = Array.isArray(raw) ? raw : [raw];      // 旧接口 /api/graph/all 直接返回数组
       if (!list.length) throw new Error('文件里没有图');
     } catch (err) {
@@ -2079,7 +2169,7 @@ function importDocs(docs) {
   if (docs.length === 1) {
     var doc = docs[0];
     confirmDialog('导入信号图',
-      '将载入「' + esc(doc.name) + '」：' + doc.graph.devices.length + ' 台设备 / ' + doc.graph.links.length + ' 条连线。<br>当前画布会被替换（可用 Ctrl+Z 撤回上一步操作，但不恢复整图）。',
+      '将载入「' + esc(doc.name) + '」：' + doc.graph.devices.length + ' 台设备 / ' + doc.graph.links.length + ' 条连线。<br>当前画布会被替换，且撤销记录会被清空。',
       function () {
         disarm();
         S.undo = []; S.redo = [];
@@ -2296,7 +2386,7 @@ function openDeviceEditor(deviceId) {
     title: '编辑设备', sub: work.name, size: 'wide', body: deviceFormHtml(work),
     buttons: [
       { label: '取消' },
-      { label: '保存', cls: 'primary', onClick: function () { updateDevice(deviceId, work); toast('设备已更新', 'ok'); } }
+      { label: '保存', cls: 'primary', onClick: function () { if (!updateDevice(deviceId, work)) return false; toast('设备已更新', 'ok'); } }
     ]
   });
 
@@ -2593,7 +2683,7 @@ function importTemplates(file) {
   reader.onload = function () {
     var list;
     try {
-      var raw = JSON.parse(String(reader.result));
+      var raw = JSON.parse(String(reader.result).replace(/^\uFEFF/, ''));
       list = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.templates) ? raw.templates : [raw]);
     } catch (err) {
       toast('模板导入失败：文件不是合法 JSON', 'err');
@@ -2722,7 +2812,7 @@ function onCanvasPointerDown(e) {
     if (last && last.key === key && now - last.t < 320) {
       S.view.lastPortDown = null;
       var found = portByRef(ref.device, ref.port);
-      if (found && isBidi(found.port)) { openMulticastModal(found.port, { live: true }); return; }
+      if (found && isBidi(found.port)) { disarm(); openMulticastModal(found.port, { live: true }); return; }
     }
     S.view.lastPortDown = { key: key, t: now };
 
@@ -2779,6 +2869,7 @@ function onPointerMove(e) {
   }
   if (d.type === 'node') {
     if (!d.moved) return;
+    if (!d.snapped) { d.snapped = true; snapshot(); }      // 一次拖动 = 一个撤销步（写入坐标之前拍快照）
     var pos = { x: Math.round(d.ox + dx / S.view.cam.zoom), y: Math.round(d.oy + dy / S.view.cam.zoom) };
     S.doc.layout.nodes[d.id] = pos;
     renderCanvas();
@@ -2903,6 +2994,8 @@ function onKeyDown(e) {
     renderAll();
     return;
   }
+  // 弹窗打开时其余快捷键让位（Esc 已在上面处理）：避免在编辑器背后删设备、撤销改图
+  if (S.modalStack.length) return;
   if (e.ctrlKey || e.metaKey) {
     // 用 e.code 判断物理键：中文输入法激活时 e.key 是 "Process"
     var code = e.code;
@@ -2943,6 +3036,9 @@ function bindEvents() {
   canvas.addEventListener('pointerdown', onCanvasPointerDown);
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', function () {   // 触摸/笔被系统打断：复位拖拽会话
+    if (S.drag) { S.drag = null; renderAll(); }
+  });
   canvas.addEventListener('wheel', onWheel, { passive: false });
   canvas.addEventListener('contextmenu', onContextMenu);
 
@@ -3058,12 +3154,6 @@ function boot() {
   bindEvents();
   applyViewMode();
   markSaved();
-
-  window.addEventListener('error', function (ev) {
-    var box = $('bootError');
-    box.classList.remove('hidden');
-    box.textContent = '脚本错误：' + (ev.message || ev.error);
-  });
 }
 
 boot();

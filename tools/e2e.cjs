@@ -11,7 +11,8 @@
  *
  * 覆盖：启动无报错 / 示例建图 / 流追踪 / 双视图 / 撤销重做 / 连线校验与 1口1线顶替 /
  *      组播派生与孤儿清理 / schema 字段 / 设备编辑与组播弹窗 / 图库保存与刷新恢复 /
- *      真实鼠标拖拽·拖线·双击·滚轮·平移·点线删除。
+ *      真实鼠标拖拽·拖线·双击·滚轮·平移·点线删除；
+ *      回归：B 口不能选流/拖线、弹窗打开时 Delete 无效、BOM 导入、同设备双口同地址被拒。
  * 退出码：全部通过 0，有失败 1，驱动异常 2。截图与 report.json 落在输出目录。
  */
 const fs = require('fs');
@@ -77,6 +78,7 @@ function httpJson(url) {
   await send('Page.enable');
   await send('Network.enable');
   await send('Network.setCacheDisabled', { cacheDisabled: true });
+  await send('DOM.enable');
 
   const ev = async (expr) => {
     const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true, userGesture: true });
@@ -377,6 +379,107 @@ function httpJson(url) {
   })()`);
   check('import: 数组批量导入（进图库并打开第一张）',
     bulk.after === bulk.before + 2 && bulk.name === '图A' && bulk.devices === bulk.devBefore, bulk);
+
+  // ==========================================================================
+  // 回归：审核单 P1/P2 的五个场景
+  // ==========================================================================
+  const FIXTURE = {
+    name: '回归用例',
+    graph: {
+      version: 2, name: '回归用例',
+      devices: [
+        { id: 'rg_src', name: '回归源', type: 'Encoder', ports: [
+            { id: 'rg_p1a', number: '1A', type: 'ip_port', direction: 'out', bidirectional: true, program: '',
+              multicast_out: [{ id: 'rg_m1', address: 'udp://239.9.9.1:5000', name: 'RG' }], multicast_in: [] },
+            { id: 'rg_p1b', number: '1B', type: 'ip_port', direction: 'out', bidirectional: true, program: '',
+              multicast_out: [], multicast_in: [] }
+          ], inner_links: [] },
+        { id: 'rg_dst', name: '回归目标', type: 'Monitor', ports: [
+            { id: 'rg_p2', number: '1', type: 'ip_port', direction: 'in', bidirectional: true, program: '',
+              multicast_out: [], multicast_in: [{ id: 'rg_m2', address: 'udp://239.9.9.1:5000', name: 'RG' }] }
+          ], inner_links: [] },
+        { id: 'rg_sw', name: '回归双口', type: 'Encoder', ports: [
+            { id: 'rg_s1', number: '1', type: 'ip_port', direction: 'out', bidirectional: true, program: '', multicast_out: [], multicast_in: [] },
+            { id: 'rg_s2', number: '2', type: 'ip_port', direction: 'out', bidirectional: true, program: '', multicast_out: [], multicast_in: [] }
+          ], inner_links: [] }
+      ],
+      links: []
+    },
+    layout: { version: 1, nodes: { rg_src: { x: 80, y: 80 }, rg_dst: { x: 640, y: 80 }, rg_sw: { x: 80, y: 320 } }, viewport: { x: 0, y: 0, zoom: 1 } }
+  };
+  await ev(`(function(){
+    var f=${JSON.stringify(FIXTURE)};
+    var a=__SF__.normalizeDoc(f), b=__SF__.normalizeDoc(f);
+    b.name='回归用例副本';
+    __SF__.importDocs([a,b]);
+  })()`);
+  await sleep(300);
+  await ev('document.querySelector("#viewSeg button[data-mode=routing]").click(); __SF__.fitView(true); __SF__.render();');
+  await sleep(350);
+
+  // 1) B 口不能作为选流源
+  const bPort = await center('[data-port="rg_src|rg_p1b"]');
+  await click(bPort);
+  const bPick = await ev('({picking: !!__SF__.S.view.picking, bar: !document.getElementById("connectBar").classList.contains("hidden")})');
+  check('P1-1: B 口单击不进入选流', bPick.picking === false && bPick.bar === false, bPick);
+  await sleep(420);                      // 超过 320ms 的双击判定窗口，避免下一步拖线被当成双击
+  await ev(`(function(){var xs=document.querySelectorAll('.mask .x');if(xs.length)xs[xs.length-1].click();})()`);
+
+  // 2) B 口不能拖信号连线（含已选流路径）
+  const dstPort = await center('[data-port="rg_dst|rg_p2"]');
+  const linksBefore = await ev('__SF__.links().length');
+  await drag(bPort, dstPort);
+  const linksAfter = await ev('__SF__.links().length');
+  const armedAfter = await ev('!!__SF__.S.view.armed');
+  check('P1-1: B 口拖线被拒且不建线', linksAfter === linksBefore && armedAfter === false,
+    { before: linksBefore, after: linksAfter, armed: armedAfter });
+
+  // 3) 弹窗打开时 Delete 不得删设备
+  const beforeDevices = await ev('__SF__.devices().length');
+  const srcPt = await ev(`(function(){var r=document.querySelector('[data-dev="rg_src"] rect.body').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};})()`);
+  await mouse('mousePressed', srcPt.x, srcPt.y, { button: 'right', buttons: 2 });
+  await mouse('mouseReleased', srcPt.x, srcPt.y, { button: 'right', buttons: 0 });
+  await sleep(200);
+  const menuHit = await ev(`(function(){
+    var t=[].slice.call(document.querySelectorAll('#menu .mi')).filter(function(x){return x.textContent.indexOf('编辑设备')>=0;})[0];
+    if(!t) return false; t.click(); return true;
+  })()`);
+  await sleep(300);
+  const editTitle = await ev(`(function(){var b=document.querySelectorAll('.mask .mhead b');return b.length?b[b.length-1].textContent:'';})()`);
+  check('P1-2: 设备编辑弹窗已打开', menuHit === true && editTitle.indexOf('编辑设备') >= 0, { menuHit, editTitle });
+  // 让焦点离开输入框：真实场景里点过按钮后焦点就会丢，这里显式复现
+  await ev('(function(){ if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); })()');
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Delete', code: 'Delete', windowsVirtualKeyCode: 46, nativeVirtualKeyCode: 46 });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Delete', code: 'Delete', windowsVirtualKeyCode: 46, nativeVirtualKeyCode: 46 });
+  await sleep(250);
+  const modalState = await ev(`({masks: document.querySelectorAll('.mask').length, devices: __SF__.devices().length, confirms: [].slice.call(document.querySelectorAll('.mask .mhead b')).map(function(x){return x.textContent;}).join('|')})`);
+  check('P1-2: 弹窗打开时 Delete 无效', modalState.masks === 1 && modalState.devices === beforeDevices && modalState.confirms.indexOf('删除设备') < 0, modalState);
+  await ev(`(function(){var xs=document.querySelectorAll('.mask .x');if(xs.length)xs[xs.length-1].click();})()`);
+  await sleep(150);
+
+  // 4) 带 BOM 的 JSON 能导入（Windows 记事本另存为的常见形态）
+  const payload = await ev('JSON.stringify({app:"sysflow",schemaVersion:2,name:"BOM 测试图",graph:__SF__.doc().graph,layout:__SF__.doc().layout})');
+  fs.writeFileSync(path.join(OUT, 'bom.json'), '\uFEFF' + payload, 'utf8');
+  const root = await send('DOM.getDocument', { depth: 1 });
+  const fileNode = await send('DOM.querySelector', { nodeId: root.root.nodeId, selector: '#fileInput' });
+  await send('DOM.setFileInputFiles', { files: [path.resolve(OUT, 'bom.json')], nodeId: fileNode.nodeId });
+  await sleep(500);
+  await ev(`(function(){var b=document.querySelectorAll('.mask [data-mbtn]');if(b.length)b[b.length-1].click();})()`);
+  await sleep(400);
+  const bomDoc = await ev('({name: __SF__.doc().name, devices: __SF__.devices().length})');
+  check('P1-3: 带 BOM 的 JSON 可导入', bomDoc.name === 'BOM 测试图' && bomDoc.devices === 3, bomDoc);
+
+  // 5) 同一设备两个端口配成同一发送地址 → 保存被拒（编辑器走深拷贝，必须提交前校验）
+  const dup = await ev(`(function(){
+    var d=__SF__.doc().graph.devices.filter(function(x){return x.id==='rg_sw';})[0];
+    var next=JSON.parse(JSON.stringify(d));
+    next.ports.forEach(function(p){ p.type='ip_port'; p.multicast_out=[{id:'dup_'+p.id, address:'udp://239.9.9.9:5000', name:'DUP'}]; });
+    var before=JSON.stringify(d.ports.map(function(p){return p.multicast_out;}));
+    var ok=__SF__.updateDevice('rg_sw', next);
+    var after=JSON.stringify(__SF__.doc().graph.devices.filter(function(x){return x.id==='rg_sw';})[0].ports.map(function(p){return p.multicast_out;}));
+    return { ok: ok, unchanged: before === after };
+  })()`);
+  check('P2-5c: 同设备两口同地址保存被拒', dup.ok === false && dup.unchanged === true, dup);
 
   // ==========================================================================
   const failed = checks.filter((c) => !c.pass);

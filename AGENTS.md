@@ -66,7 +66,7 @@ git ls-remote "<带令牌的远端>" refs/heads/main   # 核对远端真值（�
 |---|---|---|
 | 常量 | `NODE_PAD/NAME_H/PORT_ROW/SPARSE_ROW` | 设备卡片与端口行距（与旧 layout.ts 一致） |
 | 工具 | `uid/esc/clamp/deep/isBidi/isMirror` | 通用；**所有进 SVG 的字符串必须过 `esc()`** |
-| 存储 | `lsGet/lsSet/persistCurrent/saveToLibrary/openDoc` | localStorage 三键：`sf.current.v1` 草稿、`sf.library.v1` 图库、`sf.templates.v1` 模板 |
+| 存储 | `lsGet/lsSet/persistCurrent/saveToLibrary/openDoc` | localStorage 四键：`sf.current.v1` 草稿、`sf.library.v1` 图库、`sf.templates.v1` 模板、`sf.ui.v1` 界面偏好（视图模式） |
 | 查找 | `deviceById/portByRef/portPoint/portPointById` | 端口坐标由此唯一产出 |
 | 校验 | `checkLink/uniqueName` | 连线规则集中处 |
 | 派生 | `mirrorBPortsIn/followRenames/cleanOrphanReceivers/pruneSignalLinks/traceSignals/allFlows/flowColor` | 全部幂等 |
@@ -119,6 +119,8 @@ git ls-remote "<带令牌的远端>" refs/heads/main   # 核对远端真值（�
 - 浮动缩放条 `#zoomCtl` 在画布左下；`fitView` 内容是居中的
 - 端口布局：`direction:"in"` 画在左侧、`"out"` 画在右侧；IP 口天然双向（`bidirectional:true`）
 - 提示统一用 `toast()`；破坏性操作统一 `confirmDialog()`
+- **弹窗打开时除 Esc 外快捷键一律让位**（`onKeyDown` 里 `S.modalStack.length` 守卫），避免在编辑器背后删设备/改图
+- 拖动节点也是一次可撤销操作：第一次真正位移前 `snapshot()`，一次拖动 = 一个撤销步
 - 路由视图右侧流面板：点流可只看该流，再点「全部」恢复
 - 顶栏顺序：撤销 / 重做 / 适应画布 / 整理布局 / 设备模板 / 图库 / 导入 / 导出 / ＋设备 / 保存
 
@@ -142,7 +144,7 @@ git ls-remote "<带令牌的远端>" refs/heads/main   # 核对远端真值（�
 
 ## 当前状态与已知限制
 
-已完成（2026-10-23 单文件重构，端到端自检 33 项全绿）：
+已完成（2026-10-23 单文件重构，端到端自检 39 项全绿）：
 双视图、设备增删改、端口与组播编辑、信号连线与流追踪、B 口镜像、撤销重做、图库/自动保存/导入导出、
 适应画布、整理布局、深色 UI、示例图。
 
@@ -166,5 +168,6 @@ node tools/e2e.cjs 9224 .tmp
 ```
 
 `tools/e2e.cjs` 覆盖：启动无报错、示例建图、流追踪路径、双视图段数、撤销重做、连线校验与 1口1线顶替、
-组播派生与孤儿清理、schema 字段、设备编辑/组播弹窗、图库保存与刷新恢复、真实鼠标拖拽/拖线/双击/滚轮/平移/点线删除。
+组播派生与孤儿清理、schema 字段、设备编辑/组播弹窗、图库保存与刷新恢复、真实鼠标拖拽/拖线/双击/滚轮/平移/点线删除；
+回归用例：B 口不能选流/拖线、弹窗打开时 Delete 无效、带 BOM 的 JSON 可导入、同设备双口同地址保存被拒。
 全部通过退出码 0，截图与 `report.json` 落在输出目录。
