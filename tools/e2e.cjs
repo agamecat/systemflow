@@ -481,6 +481,22 @@ function httpJson(url) {
   })()`);
   check('P2-5c: 同设备两口同地址保存被拒', dup.ok === false && dup.unchanged === true, dup);
 
+  // 补充：源设备与转发设备可以重复声明同一地址，非源之间才拒绝（applyPortMulticast 路径）
+  const mcScope = await ev(`(function(){
+    var g=__SF__.S.doc.graph;
+    g.devices.push({id:'rg_net',name:'回归交换机',type:'Net-Switch',inner_links:[],ports:[
+      {id:'rg_net_p1',number:'1',type:'ip_port',direction:'out',bidirectional:true,program:'',
+       multicast_out:[{id:'nm1',address:'udp://239.9.9.1:5000',name:'RG'}],multicast_in:[]}]});
+    __SF__.render();
+    var fwd=g.devices.filter(function(x){return x.id==='rg_net';})[0].ports[0];
+    var allow=__SF__.applyPortMulticast(fwd,[{address:'udp://239.9.9.1:5000',name:'RG'}],false);
+    var src=g.devices.filter(function(x){return x.id==='rg_sw';})[0].ports[0];
+    var reject=__SF__.applyPortMulticast(src,[{address:'udp://239.9.9.1:5000',name:'RG'}],false);
+    return {allow:allow,reject:reject};
+  })()`);
+  check('P2-补充: 源与转发设备重复声明合法，非源才拒绝',
+    mcScope.allow === true && mcScope.reject === false, mcScope);
+
   // ==========================================================================
   const failed = checks.filter((c) => !c.pass);
   console.log('\n==== 结果 ====');

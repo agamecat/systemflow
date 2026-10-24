@@ -1179,13 +1179,23 @@ function applyPortMulticast(port, nextOuts, live) {
     toast('同一端口的发送地址不能重复', 'warn');
     return false;
   }
-  var others = {};
+  // 与 updateDevice 同口径：只把"非转发设备的输出"视为独立发送端。
+  // 转发设备（Net-Switch / Ni / OTN）的入出口重复声明同一地址是合法形态；
+  // 正在编辑的端口属于转发设备时，也不做冲突检测。
+  var ownerType = '';
   devices().forEach(function (d) {
-    d.ports.forEach(function (p) {
-      if (p.id === port.id || isMirror(p)) return;          // B 口是 A 口拷贝，不算独立发送端
-      (p.multicast_out || []).forEach(function (m) { if (m.address) others[m.address] = 1; });
-    });
+    for (var i = 0; i < d.ports.length; i++) if (d.ports[i].id === port.id) ownerType = d.type;
   });
+  var others = {};
+  if (!FORWARDERS[ownerType]) {
+    devices().forEach(function (d) {
+      if (FORWARDERS[d.type]) return;
+      d.ports.forEach(function (p) {
+        if (p.id === port.id || isMirror(p)) return;          // B 口是 A 口拷贝，不算独立发送端
+        (p.multicast_out || []).forEach(function (m) { if (m.address) others[m.address] = 1; });
+      });
+    });
+  }
   for (var i = 0; i < addrs.length; i++) {
     if (others[addrs[i]]) { toast('该地址已被其他端口占用（一个地址只能有一个发送端）', 'warn'); return false; }
   }
@@ -2174,6 +2184,8 @@ function importDocs(docs) {
         disarm();
         S.undo = []; S.redo = [];
         S.doc = doc;
+        S.view.selectedDevice = '';
+        S.view.selectedFlow = '';
         S.view.mode = suggestedMode(doc);
         $('graphName').value = S.doc.name;
         mirrorBPorts();
@@ -3182,6 +3194,7 @@ window.__SF__ = {
   importDocs: importDocs,
   importTemplates: importTemplates,
   normalizeTemplate: normalizeTemplate,
+  applyPortMulticast: applyPortMulticast,
   geom: function (id) { var d = deviceById(id); return d ? nodeGeom(d) : null; },
   portPoint: portPointById,
   fitView: fitView
