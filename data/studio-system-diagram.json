@@ -1,0 +1,2490 @@
+{
+  "app": "sysflow",
+  "schemaVersion": 2,
+  "exportedAt": "2026-10-24T21:28:42",
+  "name": "演播室样例",
+  "graph": {
+    "version": 2,
+    "name": "演播室样例",
+    "devices": [
+      {
+        "id": "dev_b23710551e",
+        "name": "CAM1",
+        "type": "CAM",
+        "ports": [
+          {
+            "id": "p_da47643377",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "4a9319f3-938c-4225-8ec5-d093c88e96bd",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "eb3ad9c7-dfa3-4916-890e-b0854f2aad91",
+                "address": "225.0.0.1",
+                "name": "CAM1"
+              }
+            ]
+          },
+          {
+            "id": "p_00a26110ad",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60cex9g",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60cq7st",
+                "address": "225.0.0.1",
+                "name": "CAM1"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_cb4fcb72a3",
+        "name": "CAM2",
+        "type": "CAM",
+        "ports": [
+          {
+            "id": "p_41b1df955e",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-CAM2",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.10",
+                "address": "225.0.0.10",
+                "name": "CAM2"
+              }
+            ]
+          },
+          {
+            "id": "p_6c435b629a",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60wgfxb",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr606049l",
+                "address": "225.0.0.10",
+                "name": "CAM2"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_8898bf66f5",
+        "name": "CAM3",
+        "type": "CAM",
+        "ports": [
+          {
+            "id": "p_f37b535e39",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-CAM3",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.11",
+                "address": "225.0.0.11",
+                "name": "CAM3"
+              }
+            ]
+          },
+          {
+            "id": "p_14af65d49c",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60z91nu",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60giv71",
+                "address": "225.0.0.11",
+                "name": "CAM3"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_2d6bc8b6b6",
+        "name": "CAM4",
+        "type": "CAM",
+        "ports": [
+          {
+            "id": "p_694549d85e",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-CAM4",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.12",
+                "address": "225.0.0.12",
+                "name": "CAM4"
+              }
+            ]
+          },
+          {
+            "id": "p_6319c972ee",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr602pjjy",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr607uoqf",
+                "address": "225.0.0.12",
+                "name": "CAM4"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_9b6fd87ba8",
+        "name": "切换台1",
+        "type": "切换台",
+        "ports": [
+          {
+            "id": "p_ddb75be3b9",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "a1da25a1-aac5-4288-ae19-e66ea60d5525",
+                "address": "225.0.0.1",
+                "name": "CAM1"
+              },
+              {
+                "id": "mc-225.0.0.10",
+                "address": "225.0.0.10",
+                "name": "CAM2"
+              },
+              {
+                "id": "mc-225.0.0.11",
+                "address": "225.0.0.11",
+                "name": "CAM3"
+              },
+              {
+                "id": "mc-225.0.0.12",
+                "address": "225.0.0.12",
+                "name": "CAM4"
+              },
+              {
+                "id": "mc-225.0.0.20",
+                "address": "225.0.0.20",
+                "name": "VTR1"
+              },
+              {
+                "id": "mc-225.0.0.21",
+                "address": "225.0.0.21",
+                "name": "VTR2"
+              },
+              {
+                "id": "mc-225.0.0.22",
+                "address": "225.0.0.22",
+                "name": "ASP1"
+              },
+              {
+                "id": "mc-225.0.0.23",
+                "address": "225.0.0.23",
+                "name": "包装1"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-pgm-1a",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ]
+          },
+          {
+            "id": "p_a376f2bf1e",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60qtveu",
+                "address": "225.0.0.1",
+                "name": "CAM1"
+              },
+              {
+                "id": "mc_ffr60gnkdl",
+                "address": "225.0.0.10",
+                "name": "CAM2"
+              },
+              {
+                "id": "mc_ffr60on5h5",
+                "address": "225.0.0.11",
+                "name": "CAM3"
+              },
+              {
+                "id": "mc_ffr60tilqw",
+                "address": "225.0.0.12",
+                "name": "CAM4"
+              },
+              {
+                "id": "mc_ffr60in8t8",
+                "address": "225.0.0.20",
+                "name": "VTR1"
+              },
+              {
+                "id": "mc_ffr60g8c0k",
+                "address": "225.0.0.21",
+                "name": "VTR2"
+              },
+              {
+                "id": "mc_ffr606hbm3",
+                "address": "225.0.0.22",
+                "name": "ASP1"
+              },
+              {
+                "id": "mc_ffr60wxiez",
+                "address": "225.0.0.23",
+                "name": "包装1"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60w4sh7",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ]
+          },
+          {
+            "id": "p_12bbff9bf3",
+            "number": "3A",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-3a-225.0.0.30",
+                "address": "225.0.0.30",
+                "name": "CAM5"
+              },
+              {
+                "id": "mc-3a-225.0.0.31",
+                "address": "225.0.0.31",
+                "name": "VTR4"
+              },
+              {
+                "id": "mc-3a-225.0.0.33",
+                "address": "225.0.0.33",
+                "name": "包装2"
+              },
+              {
+                "id": "mc-3a-225.0.0.34",
+                "address": "225.0.0.34",
+                "name": "包装4"
+              },
+              {
+                "id": "mc-3a-225.0.0.35",
+                "address": "225.0.0.35",
+                "name": "虚拟1"
+              },
+              {
+                "id": "mc-3a-225.0.0.36",
+                "address": "225.0.0.36",
+                "name": "虚拟2"
+              },
+              {
+                "id": "mc-3a-225.0.0.37",
+                "address": "225.0.0.37",
+                "name": "虚拟3"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-pgm-3a",
+                "address": "224.0.0.98",
+                "name": "PGM"
+              }
+            ]
+          },
+          {
+            "id": "p_43e9293547",
+            "number": "3B",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60gmqfw",
+                "address": "225.0.0.30",
+                "name": "CAM5"
+              },
+              {
+                "id": "mc_ffr604uwvf",
+                "address": "225.0.0.31",
+                "name": "VTR4"
+              },
+              {
+                "id": "mc_ffr604jf0e",
+                "address": "225.0.0.33",
+                "name": "包装2"
+              },
+              {
+                "id": "mc_ffr60i65cu",
+                "address": "225.0.0.34",
+                "name": "包装4"
+              },
+              {
+                "id": "mc_ffr602azs5",
+                "address": "225.0.0.35",
+                "name": "虚拟1"
+              },
+              {
+                "id": "mc_ffr60p48gv",
+                "address": "225.0.0.36",
+                "name": "虚拟2"
+              },
+              {
+                "id": "mc_ffr60gjvu6",
+                "address": "225.0.0.37",
+                "name": "虚拟3"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr609cao5",
+                "address": "224.0.0.98",
+                "name": "PGM"
+              }
+            ]
+          },
+          {
+            "id": "p_53556ab778",
+            "number": "2A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-2a-225.0.0.40",
+                "address": "225.0.0.40",
+                "name": "CAM6"
+              },
+              {
+                "id": "mc-2a-225.0.0.41",
+                "address": "225.0.0.41",
+                "name": "ASP2"
+              },
+              {
+                "id": "mc-2a-225.0.0.42",
+                "address": "225.0.0.42",
+                "name": "包装3"
+              },
+              {
+                "id": "mc-2a-225.0.0.43",
+                "address": "225.0.0.43",
+                "name": "虚拟5"
+              },
+              {
+                "id": "mc-2a-225.0.0.44",
+                "address": "225.0.0.44",
+                "name": "VTR3"
+              },
+              {
+                "id": "mc-2a-225.0.0.45",
+                "address": "225.0.0.45",
+                "name": "IPG1"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-pgm-2a",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ]
+          },
+          {
+            "id": "p_bf540c7a39",
+            "number": "2B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60gr5kc",
+                "address": "225.0.0.40",
+                "name": "CAM6"
+              },
+              {
+                "id": "mc_ffr60hriyc",
+                "address": "225.0.0.41",
+                "name": "ASP2"
+              },
+              {
+                "id": "mc_ffr60ls51b",
+                "address": "225.0.0.42",
+                "name": "包装3"
+              },
+              {
+                "id": "mc_ffr608f0ey",
+                "address": "225.0.0.43",
+                "name": "虚拟5"
+              },
+              {
+                "id": "mc_ffr60kbzq6",
+                "address": "225.0.0.44",
+                "name": "VTR3"
+              },
+              {
+                "id": "mc_ffr600y2sx",
+                "address": "225.0.0.45",
+                "name": "IPG1"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60hhl0z",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ]
+          },
+          {
+            "id": "p_9294b9c077",
+            "number": "4A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "6dfdae85-e0f7-4ac6-b8df-82527c08676e",
+                "address": "225.0.0.46",
+                "name": "IPG2"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-pgm-4a",
+                "address": "224.0.0.96",
+                "name": "PGM"
+              }
+            ]
+          },
+          {
+            "id": "p_65fcd74c4c",
+            "number": "4B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr600fkir",
+                "address": "225.0.0.46",
+                "name": "IPG2"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr602o41p",
+                "address": "224.0.0.96",
+                "name": "PGM"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": true
+      },
+      {
+        "id": "dev_5e746ee9e2",
+        "name": "VTR1",
+        "type": "VTR",
+        "ports": [
+          {
+            "id": "p_bfafc0c4e9",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-VTR1",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.20",
+                "address": "225.0.0.20",
+                "name": "VTR1"
+              }
+            ]
+          },
+          {
+            "id": "p_18b786a01b",
+            "number": "2B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_90d58b3e5d",
+        "name": "ASP1",
+        "type": "ASP",
+        "ports": [
+          {
+            "id": "p_f032cc5a7e",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-ASP1",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.22",
+                "address": "225.0.0.22",
+                "name": "ASP1"
+              }
+            ]
+          },
+          {
+            "id": "p_ca4aea9401",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr602oju7",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60vj84i",
+                "address": "225.0.0.22",
+                "name": "ASP1"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_b203749db8",
+        "name": "包装1",
+        "type": "包装",
+        "ports": [
+          {
+            "id": "p_4ee07c63ce",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-包装1",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.23",
+                "address": "225.0.0.23",
+                "name": "包装1"
+              }
+            ]
+          },
+          {
+            "id": "p_c8cee769ce",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60qaiz4",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60fgw99",
+                "address": "225.0.0.23",
+                "name": "包装1"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_5708923db6",
+        "name": "包装2",
+        "type": "包装",
+        "ports": [
+          {
+            "id": "p_16078869c4",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-包装2",
+                "address": "224.0.0.98",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.33",
+                "address": "225.0.0.33",
+                "name": "包装2"
+              }
+            ]
+          },
+          {
+            "id": "p_d7d482df2e",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60h13ks",
+                "address": "224.0.0.98",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr608kdfl",
+                "address": "225.0.0.33",
+                "name": "包装2"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_3167e9d4a8",
+        "name": "虚拟1",
+        "type": "虚拟",
+        "ports": [
+          {
+            "id": "p_a4347c1421",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "2fc75ca8-0805-4138-a4ab-d8e3c9846173",
+                "address": "225.0.0.30",
+                "name": "CAM5"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.35",
+                "address": "225.0.0.35",
+                "name": "虚拟1"
+              }
+            ]
+          },
+          {
+            "id": "p_7fc82c775f",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60sfzps",
+                "address": "225.0.0.30",
+                "name": "CAM5"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60phwbs",
+                "address": "225.0.0.35",
+                "name": "虚拟1"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_236da84021",
+        "name": "虚拟2",
+        "type": "虚拟",
+        "ports": [
+          {
+            "id": "p_e10d704e9f",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.36",
+                "address": "225.0.0.36",
+                "name": "虚拟2"
+              }
+            ]
+          },
+          {
+            "id": "p_1a9f3c3f0b",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60tv43i",
+                "address": "225.0.0.36",
+                "name": "虚拟2"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_442690335e",
+        "name": "VTR3",
+        "type": "VTR",
+        "ports": [
+          {
+            "id": "p_474098a571",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-VTR3",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.44",
+                "address": "225.0.0.44",
+                "name": "VTR3"
+              }
+            ]
+          },
+          {
+            "id": "p_359237ab7a",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60gkun7",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60o8mgp",
+                "address": "225.0.0.44",
+                "name": "VTR3"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_ea10ef590c",
+        "name": "VTR2",
+        "type": "VTR",
+        "ports": [
+          {
+            "id": "p_7babb2490b",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-VTR2",
+                "address": "224.0.0.99",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.21",
+                "address": "225.0.0.21",
+                "name": "VTR2"
+              }
+            ]
+          },
+          {
+            "id": "p_1e4b6849a1",
+            "number": "2B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_4fcbc7b633",
+        "name": "包装3",
+        "type": "包装",
+        "ports": [
+          {
+            "id": "p_fcb31d789c",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-包装3",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.42",
+                "address": "225.0.0.42",
+                "name": "包装3"
+              }
+            ]
+          },
+          {
+            "id": "p_08385a51c2",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60049cj",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60fb5uk",
+                "address": "225.0.0.42",
+                "name": "包装3"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_7af530c5c2",
+        "name": "CAM6",
+        "type": "CAM反",
+        "ports": [
+          {
+            "id": "p_50d03e4c14",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-CAM6",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.40",
+                "address": "225.0.0.40",
+                "name": "CAM6"
+              }
+            ]
+          },
+          {
+            "id": "p_65c72cbc66",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr600w4be",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr600pmcy",
+                "address": "225.0.0.40",
+                "name": "CAM6"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_e778491bcf",
+        "name": "IPG1",
+        "type": "IPG",
+        "ports": [
+          {
+            "id": "p_304b508ef4",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-IPG1",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.45",
+                "address": "225.0.0.45",
+                "name": "IPG1"
+              }
+            ]
+          },
+          {
+            "id": "p_00a71f113c",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60tjpz4",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60bgni6",
+                "address": "225.0.0.45",
+                "name": "IPG1"
+              }
+            ]
+          },
+          {
+            "id": "p_907ac275df",
+            "number": "1",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_81a5ef8421",
+            "number": "2",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_3339e65376",
+            "number": "3",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_c821a838ae",
+            "number": "4",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_87b24e7396",
+            "number": "5",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_b3fbbeeedb",
+            "number": "6",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_82c64fccbc",
+            "number": "7",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_5e9e2bb9be",
+            "number": "8",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_8b68069308",
+            "number": "9",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_b6dd768c98",
+            "number": "10",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_2286fb8641",
+            "number": "11",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_95949b6de7",
+            "number": "12",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_c4fae93741",
+            "number": "13",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_f7c87b9bd5",
+            "number": "14",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_7d516c9d34",
+            "number": "15",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_61aacbba42",
+            "number": "16",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_f5838cbd26",
+        "name": "IPG2",
+        "type": "IPG",
+        "ports": [
+          {
+            "id": "p_8d6c88ab4b",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm4a-ipg2",
+                "address": "224.0.0.96",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.46",
+                "address": "225.0.0.46",
+                "name": "IPG2"
+              }
+            ]
+          },
+          {
+            "id": "p_73830bafea",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60tku1w",
+                "address": "224.0.0.96",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60h5b4l",
+                "address": "225.0.0.46",
+                "name": "IPG2"
+              }
+            ]
+          },
+          {
+            "id": "p_c46a1e6f39",
+            "number": "1",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_fbac1d63bc",
+            "number": "2",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_95f0946d8e",
+            "number": "3",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_b8413a3ebf",
+            "number": "4",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_c45205d780",
+            "number": "5",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_049f1bd09c",
+            "number": "6",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_8a1158f222",
+            "number": "7",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_16e281dbe0",
+            "number": "8",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_f25e2f6096",
+            "number": "9",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_14266adbf6",
+            "number": "10",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_4df4508220",
+            "number": "11",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_4a31459cfe",
+            "number": "12",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_ea54fe2544",
+            "number": "13",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_2bdbfd91b4",
+            "number": "14",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_a68ce334b1",
+            "number": "15",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          },
+          {
+            "id": "p_6eddf0f35e",
+            "number": "16",
+            "type": "sdi_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_358b3845f7",
+        "name": "ASP2",
+        "type": "ASP",
+        "ports": [
+          {
+            "id": "p_24968f7ecf",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-ASP2",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.41",
+                "address": "225.0.0.41",
+                "name": "ASP2"
+              }
+            ]
+          },
+          {
+            "id": "p_bd64cc572c",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60ggw9h",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60q1mrh",
+                "address": "225.0.0.41",
+                "name": "ASP2"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_f55f70b885",
+        "name": "CAM5",
+        "type": "CAM",
+        "ports": [
+          {
+            "id": "p_68b8b46ac4",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-CAM5",
+                "address": "224.0.0.98",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.30",
+                "address": "225.0.0.30",
+                "name": "CAM5"
+              }
+            ]
+          },
+          {
+            "id": "p_0f9ee441bc",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr608v14g",
+                "address": "224.0.0.98",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60ylovy",
+                "address": "225.0.0.30",
+                "name": "CAM5"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_cd7ad891d9",
+        "name": "VTR4",
+        "type": "VTR",
+        "ports": [
+          {
+            "id": "p_93b89c80c6",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-VTR4",
+                "address": "224.0.0.98",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.31",
+                "address": "225.0.0.31",
+                "name": "VTR4"
+              }
+            ]
+          },
+          {
+            "id": "p_dc129ff6a4",
+            "number": "2B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": []
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_26e4274ce7",
+        "name": "虚拟3",
+        "type": "虚拟",
+        "ports": [
+          {
+            "id": "p_cb1eaadcaa",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.37",
+                "address": "225.0.0.37",
+                "name": "虚拟3"
+              }
+            ]
+          },
+          {
+            "id": "p_87948eeb2e",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [],
+            "multicast_out": [
+              {
+                "id": "mc_ffr601pdc7",
+                "address": "225.0.0.37",
+                "name": "虚拟3"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_d88b1f097f",
+        "name": "虚拟5",
+        "type": "虚拟",
+        "ports": [
+          {
+            "id": "p_43bcac5228",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-虚拟5",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.43",
+                "address": "225.0.0.43",
+                "name": "虚拟5"
+              }
+            ]
+          },
+          {
+            "id": "p_930150df9e",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "in",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr606z4qy",
+                "address": "224.0.0.97",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60zupo9",
+                "address": "225.0.0.43",
+                "name": "虚拟5"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      },
+      {
+        "id": "dev_b506144c16",
+        "name": "包装4",
+        "type": "包装",
+        "ports": [
+          {
+            "id": "p_82437cde08",
+            "number": "1A",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc-pgm-包装4",
+                "address": "224.0.0.98",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc-225.0.0.34",
+                "address": "225.0.0.34",
+                "name": "包装4"
+              }
+            ]
+          },
+          {
+            "id": "p_55693b119d",
+            "number": "1B",
+            "type": "ip_port",
+            "direction": "out",
+            "bidirectional": true,
+            "program": "",
+            "multicast_in": [
+              {
+                "id": "mc_ffr60dfo22",
+                "address": "224.0.0.98",
+                "name": "PGM"
+              }
+            ],
+            "multicast_out": [
+              {
+                "id": "mc_ffr60813wd",
+                "address": "225.0.0.34",
+                "name": "包装4"
+              }
+            ]
+          }
+        ],
+        "inner_links": [],
+        "sparse_ports": false
+      }
+    ],
+    "links": [
+      {
+        "id": "link_d7d9681866",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_b23710551e",
+          "port": "p_da47643377"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.1"
+      },
+      {
+        "id": "link_8c4f21ab90",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "to": {
+          "device": "dev_b23710551e",
+          "port": "p_da47643377"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.99"
+      },
+      {
+        "id": "link_2250011",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_8898bf66f5",
+          "port": "p_f37b535e39"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.11"
+      },
+      {
+        "id": "link_2250012",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_2d6bc8b6b6",
+          "port": "p_694549d85e"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.12"
+      },
+      {
+        "id": "link_pgm_cam2",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "to": {
+          "device": "dev_cb4fcb72a3",
+          "port": "p_41b1df955e"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.99"
+      },
+      {
+        "id": "link_pgm_cam3",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "to": {
+          "device": "dev_8898bf66f5",
+          "port": "p_f37b535e39"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.99"
+      },
+      {
+        "id": "link_pgm_cam4",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "to": {
+          "device": "dev_2d6bc8b6b6",
+          "port": "p_694549d85e"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.99"
+      },
+      {
+        "id": "link_2250020",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_5e746ee9e2",
+          "port": "p_bfafc0c4e9"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.20"
+      },
+      {
+        "id": "link_pgm_vtr1",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "to": {
+          "device": "dev_5e746ee9e2",
+          "port": "p_bfafc0c4e9"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.99"
+      },
+      {
+        "id": "link_2250021",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_ea10ef590c",
+          "port": "p_7babb2490b"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.21"
+      },
+      {
+        "id": "link_pgm_vtr2",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "to": {
+          "device": "dev_ea10ef590c",
+          "port": "p_7babb2490b"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.99"
+      },
+      {
+        "id": "link_2250022",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_90d58b3e5d",
+          "port": "p_f032cc5a7e"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.22"
+      },
+      {
+        "id": "link_pgm_asp1",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "to": {
+          "device": "dev_90d58b3e5d",
+          "port": "p_f032cc5a7e"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.99"
+      },
+      {
+        "id": "link_2250023",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_b203749db8",
+          "port": "p_4ee07c63ce"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.23"
+      },
+      {
+        "id": "link_pgm_包装1",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "to": {
+          "device": "dev_b203749db8",
+          "port": "p_4ee07c63ce"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.99"
+      },
+      {
+        "id": "link_3a_2250030",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_f55f70b885",
+          "port": "p_68b8b46ac4"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.30"
+      },
+      {
+        "id": "link_pgm_cam5",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "to": {
+          "device": "dev_f55f70b885",
+          "port": "p_68b8b46ac4"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.98"
+      },
+      {
+        "id": "link_3a_2250031",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_cd7ad891d9",
+          "port": "p_93b89c80c6"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.31"
+      },
+      {
+        "id": "link_pgm_vtr4",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "to": {
+          "device": "dev_cd7ad891d9",
+          "port": "p_93b89c80c6"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.98"
+      },
+      {
+        "id": "link_3a_2250033",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_5708923db6",
+          "port": "p_16078869c4"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.33"
+      },
+      {
+        "id": "link_pgm_包装2",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "to": {
+          "device": "dev_5708923db6",
+          "port": "p_16078869c4"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.98"
+      },
+      {
+        "id": "link_3a_2250034",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_b506144c16",
+          "port": "p_82437cde08"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.34"
+      },
+      {
+        "id": "link_pgm_包装4",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "to": {
+          "device": "dev_b506144c16",
+          "port": "p_82437cde08"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.98"
+      },
+      {
+        "id": "link_3a_2250035",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_3167e9d4a8",
+          "port": "p_a4347c1421"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.35"
+      },
+      {
+        "id": "link_3a_2250036",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_236da84021",
+          "port": "p_e10d704e9f"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.36"
+      },
+      {
+        "id": "link_3a_2250037",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_26e4274ce7",
+          "port": "p_cb1eaadcaa"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_12bbff9bf3"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.37"
+      },
+      {
+        "id": "link_2ax_2250040",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_7af530c5c2",
+          "port": "p_50d03e4c14"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.40"
+      },
+      {
+        "id": "link_pgm2a_cam6",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "to": {
+          "device": "dev_7af530c5c2",
+          "port": "p_50d03e4c14"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.97"
+      },
+      {
+        "id": "link_2ax_2250041",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_358b3845f7",
+          "port": "p_24968f7ecf"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.41"
+      },
+      {
+        "id": "link_pgm2a_asp2",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "to": {
+          "device": "dev_358b3845f7",
+          "port": "p_24968f7ecf"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.97"
+      },
+      {
+        "id": "link_2ax_2250042",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_4fcbc7b633",
+          "port": "p_fcb31d789c"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.42"
+      },
+      {
+        "id": "link_pgm2a_包装3",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "to": {
+          "device": "dev_4fcbc7b633",
+          "port": "p_fcb31d789c"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.97"
+      },
+      {
+        "id": "link_2ax_2250043",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_d88b1f097f",
+          "port": "p_43bcac5228"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.43"
+      },
+      {
+        "id": "link_pgm2a_虚拟5",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "to": {
+          "device": "dev_d88b1f097f",
+          "port": "p_43bcac5228"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.97"
+      },
+      {
+        "id": "link_2ax_2250044",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_442690335e",
+          "port": "p_474098a571"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.44"
+      },
+      {
+        "id": "link_pgm2a_vtr3",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "to": {
+          "device": "dev_442690335e",
+          "port": "p_474098a571"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.97"
+      },
+      {
+        "id": "link_2ax_2250045",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_e778491bcf",
+          "port": "p_304b508ef4"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.45"
+      },
+      {
+        "id": "link_pgm2a_ipg1",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_53556ab778"
+        },
+        "to": {
+          "device": "dev_e778491bcf",
+          "port": "p_304b508ef4"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.97"
+      },
+      {
+        "id": "link_pgm4a_ipg2",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_9294b9c077"
+        },
+        "to": {
+          "device": "dev_f5838cbd26",
+          "port": "p_8d6c88ab4b"
+        },
+        "kind": "signal",
+        "stream": "224.0.0.96"
+      },
+      {
+        "id": "link_b550b695a9",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_f5838cbd26",
+          "port": "p_8d6c88ab4b"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_9294b9c077"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.46"
+      },
+      {
+        "id": "link_276f12b07a",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_f55f70b885",
+          "port": "p_68b8b46ac4"
+        },
+        "to": {
+          "device": "dev_3167e9d4a8",
+          "port": "p_a4347c1421"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.30"
+      },
+      {
+        "id": "link_1b29c71acc",
+        "signal_type": "ip",
+        "from": {
+          "device": "dev_cb4fcb72a3",
+          "port": "p_41b1df955e"
+        },
+        "to": {
+          "device": "dev_9b6fd87ba8",
+          "port": "p_ddb75be3b9"
+        },
+        "kind": "signal",
+        "stream": "225.0.0.10"
+      }
+    ]
+  },
+  "layout": {
+    "version": 1,
+    "nodes": {
+      "dev_b23710551e": {
+        "x": 152,
+        "y": -54
+      },
+      "dev_cb4fcb72a3": {
+        "x": 154,
+        "y": 35
+      },
+      "dev_8898bf66f5": {
+        "x": 150,
+        "y": 122
+      },
+      "dev_2d6bc8b6b6": {
+        "x": 150,
+        "y": 207
+      },
+      "dev_9b6fd87ba8": {
+        "x": 602,
+        "y": 243
+      },
+      "dev_5e746ee9e2": {
+        "x": 152,
+        "y": 295
+      },
+      "dev_90d58b3e5d": {
+        "x": 153,
+        "y": 469
+      },
+      "dev_b203749db8": {
+        "x": 159,
+        "y": 556
+      },
+      "dev_5708923db6": {
+        "x": 160,
+        "y": 858
+      },
+      "dev_3167e9d4a8": {
+        "x": 158,
+        "y": 944
+      },
+      "dev_236da84021": {
+        "x": 157,
+        "y": 1032
+      },
+      "dev_442690335e": {
+        "x": 1051.9636840439587,
+        "y": 509.1337469061644
+      },
+      "dev_ea10ef590c": {
+        "x": 155,
+        "y": 382
+      },
+      "dev_4fcbc7b633": {
+        "x": 1044.2953659632815,
+        "y": 311.6524106759414
+      },
+      "dev_7af530c5c2": {
+        "x": 1043.5454589887606,
+        "y": 116.7202232928658
+      },
+      "dev_e778491bcf": {
+        "x": 1052.4549886873795,
+        "y": 614.8836647801458
+      },
+      "dev_f5838cbd26": {
+        "x": 1047.7790306107884,
+        "y": 997.8241689753331
+      },
+      "dev_358b3845f7": {
+        "x": 1045.8262476973346,
+        "y": 213.85382857180556
+      },
+      "dev_f55f70b885": {
+        "x": 157,
+        "y": 682
+      },
+      "dev_cd7ad891d9": {
+        "x": 152,
+        "y": 771
+      },
+      "dev_26e4274ce7": {
+        "x": 160,
+        "y": 1117
+      },
+      "dev_d88b1f097f": {
+        "x": 1046.6803633325285,
+        "y": 412.6728345951892
+      },
+      "dev_b506144c16": {
+        "x": 167,
+        "y": 1205
+      }
+    }
+  }
+}

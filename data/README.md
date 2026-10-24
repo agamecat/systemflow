@@ -1,17 +1,20 @@
 # data/ —— 仓库自带的示例数据
 
-**这里的所有数据都是编造的**：设备名是 `Node01…Node07`，组播地址是 `udp://239.0.0.x`，坐标是随手写的网格。
-它们不对应任何真实机房、真实节目或真实设备，仅用于演示与自检。
+**这里不包含任何敏感信息**：合成样例的设备名是 `Node01…Node07`、地址是 `udp://239.0.0.x`；
+演播室样例用通用角色名（`CAM1`、`切换台1`、`VTR1`…）与私网组播段（`224/225.0.0.x`），
+不对应可识别的真实机房、节目或设备。
 
 | 文件 | 内容 |
 |---|---|
-| `sample-system-diagram.json` | 7 台设备 / 6 条光纤 / 3 路组播：3 个源 → 1 台交换机 → 2 台监视器 + 1 台录制器 |
+| `sample-system-diagram.json` | 合成样例（脚本生成）：7 台设备 / 6 条光纤 / 3 路组播：3 个源 → 1 台交换机 → 2 台监视器 + 1 台录制器 |
+| `studio-system-diagram.json` | **演播室样例**（实际使用图）：23 台设备 / 42 条信号连线，6 路 CAM + VTR/ASP/包装/虚拟/IPG → 切换台（含 PGM 返送）；切换台已勾选「端口间距放大」，适合演示 IP 路由视图的标签与汇聚形态 |
 | `device-templates.json` | 3 个示例模板：`Encoder`、`Router`、`Recorder` |
 
 ## 怎么用
 
 1. 双击 `sysflow.html`
-2. 顶栏「导入」→ 选 `data/sample-system-diagram.json`
+2. 顶栏「导入」→ 选 `data/sample-system-diagram.json` 或 `data/studio-system-diagram.json`
+   （演播室样例只有信号连线，导入后会自动切到 IP 路由视图）
 3. 「设备模板」→「导入模板…」→ 选 `data/device-templates.json`
 
 导入后可以直接在三种视图里看到它：
