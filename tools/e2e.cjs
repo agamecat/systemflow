@@ -497,6 +497,50 @@ function httpJson(url) {
   check('P2-补充: 源与转发设备重复声明合法，非源才拒绝',
     mcScope.allow === true && mcScope.reject === false, mcScope);
 
+  // 6) 非 IP 端口不能配置组播（画布写入口径与设备编辑器一致，SDI 口即便双向也一样）
+  const nonIp = await ev(`(function(){
+    var g=__SF__.S.doc.graph;
+    g.devices.push({id:'rg_sdi',name:'回归SDI源',type:'SDI-Source',inner_links:[],sparse_ports:false,ports:[
+      {id:'rg_sdi_p1',number:'1',type:'sdi_port',direction:'out',bidirectional:true,program:'',multicast_in:[],multicast_out:[]}]});
+    var p=g.devices.filter(function(x){return x.id==='rg_sdi';})[0].ports[0];
+    var reject=__SF__.applyPortMulticast(p,[{address:'udp://239.9.9.7:5000',name:'SDI'}],false);
+    g.devices=g.devices.filter(function(x){return x.id!=='rg_sdi';});
+    return reject;
+  })()`);
+  check('P3-1: 非 IP 端口组播配置被拒（不产生幽灵流源）', nonIp === false, nonIp);
+
+  // 7) 同一地址两条信号连线投同一目标口（源 + 转发口并存的合法形态）：
+  //    删其中一条，另一条与目标口接收条目必须保留
+  const dualLink = await ev(`(function(){
+    var ADDR='udp://239.9.9.1:5000';
+    __SF__.S.view.armed={deviceId:'rg_src',portId:'rg_p1a',address:ADDR,name:'RG'};
+    __SF__.connectSignal('rg_dst','rg_p2');
+    __SF__.S.view.armed={deviceId:'rg_net',portId:'rg_net_p1',address:ADDR,name:'RG'};
+    __SF__.connectSignal('rg_dst','rg_p2');
+    return __SF__.links().filter(function(l){return l.kind==='signal'&&l.stream===ADDR;}).length;
+  })()`);
+  check('P3-2: 源与转发口可同时建信号连线到同一目标口', dualLink === 2, dualLink);
+  if (dualLink === 2) {
+    await ev(`(function(){
+      var ADDR='udp://239.9.9.1:5000';
+      var one=__SF__.links().filter(function(l){return l.kind==='signal'&&l.stream===ADDR&&l.from.device==='rg_src';})[0];
+      __SF__.deleteSignalLink(one.id);
+    })()`);
+    await sleep(200);
+    await ev('(function(){var b=document.querySelectorAll(".mask [data-mbtn]");if(b.length)b[b.length-1].click();})()');
+    await sleep(250);
+    const afterDel = await ev(`(function(){
+      var ADDR='udp://239.9.9.1:5000';
+      var g=__SF__.S.doc.graph;
+      var remain=g.links.filter(function(l){return l.kind==='signal'&&l.stream===ADDR;}).length;
+      var dst=g.devices.filter(function(x){return x.id==='rg_dst';})[0].ports[0];
+      var kept=(dst.multicast_in||[]).filter(function(m){return m.address===ADDR;}).length;
+      return {remain:remain,kept:kept};
+    })()`);
+    check('P3-2: 删一条后另一条与接收条目保留（不再残留失效连线）',
+      afterDel.remain === 1 && afterDel.kept === 1, afterDel);
+  }
+
   // ==========================================================================
   const failed = checks.filter((c) => !c.pass);
   console.log('\n==== 结果 ====');

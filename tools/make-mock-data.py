@@ -103,7 +103,7 @@ links = [
     link('l6', 'n4', 'n4_p7', 'n7', 'n7_p1'),
 ]
 
-layout = {'version': 1, 'nodes': {}, 'viewport': {'x': 0, 'y': 0, 'zoom': 1}}
+layout = {'version': 1, 'nodes': {}}
 for d in devices:
     layout['nodes'][d['id']] = d.pop('_pos')
 

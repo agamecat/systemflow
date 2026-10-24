@@ -502,8 +502,6 @@ var NODE_PAD = 10;      // 设备卡片内边距
 var NAME_H  = 20;       // 设备名称占位高度
 var PORT_ROW = 20;      // 端口行距
 var SPARSE_ROW = 5;     // 「端口间距放大」倍数
-var NODE_MIN_W = 130;   // 设备卡片最小宽度
-var NODE_MAX_W = 300;
 var UNDO_CAP = 30;
 
 var SIGNAL_COLORS = { ip: '#4aa3df', sdi: '#5fc46b', asi: '#c76bb4' };
@@ -562,7 +560,8 @@ function lsSet(key, value) {
 }
 
 function emptyGraph() { return { version: 2, name: '', devices: [], links: [] }; }
-function emptyLayout() { return { version: LAYOUT_V, nodes: {}, viewport: { x: 0, y: 0, zoom: 1 } }; }
+/* 相机（缩放/平移）是会话状态，不进 layout；旧文件里的 viewport 字段导入时直接忽略 */
+function emptyLayout() { return { version: LAYOUT_V, nodes: {} }; }
 function emptyDoc(name) {
   return { id: null, name: name || '未命名信号图', graph: emptyGraph(), layout: emptyLayout() };
 }
@@ -1028,13 +1027,17 @@ function updateDevice(id, next) {
   next.id = id;
   S.doc.graph.devices[idx] = next;
   renames.forEach(function (r) { followRenames(r.port, r.prevOuts); });
+  // 端口类型/方向/删改之后不再兼容的物理连线一并移除（点删光了、类型不匹配等），并明确告知
+  var physBefore = links().filter(function (l) { return l.kind !== 'signal'; }).length;
   S.doc.graph.links = links().filter(function (l) {
     return l.kind === 'signal' || checkLink(l.from, l.to).length === 0;
   });
+  var physDropped = physBefore - links().filter(function (l) { return l.kind !== 'signal'; }).length;
   cleanOrphanReceivers();
   mirrorBPorts();
   afterChange();
   if (clearedMc) toast('已清空 ' + clearedMc + ' 条非 IP 端口的组播配置', 'warn');
+  if (physDropped) toast('已移除 ' + physDropped + ' 条与新端口配置不兼容的连线', 'warn');
   return true;
 }
 
@@ -1158,20 +1161,32 @@ function deleteSignalLink(sigLinkId) {
   var dst = portByRef(l.to.device, l.to.port);
   var dstName = dst ? dst.device.name + ' 口' + dst.port.number : '目标口';
   confirmDialog('删除信号连线',
-    '删除该信号连线？将同时移除 ' + esc(dstName) + ' 上对这条流的接收组播（源口输出配置不受影响）。',
+    '删除该信号连线？若没有其他信号连线向 ' + esc(dstName) + ' 投递这条流，其接收组播将一并移除（源口输出配置不受影响）。',
     function () {
       snapshot();
-      if (dst) dst.port.multicast_in = (dst.port.multicast_in || []).filter(function (m) { return m.address !== l.stream; });
       S.doc.graph.links = links().filter(function (x) { return x.id !== sigLinkId; });
+      // 同一地址可能还有另一条信号连线投到同一目标口（源 + 转发口并存的合法形态）：
+      // 那种情况下接收条目仍被投递，不能删；只有最后一条删掉时才移除。
+      if (dst) {
+        var stillDelivered = links().some(function (x) {
+          return x.kind === 'signal' && x.stream === l.stream &&
+            x.to.device === l.to.device && x.to.port === l.to.port;
+        });
+        if (!stillDelivered) {
+          dst.port.multicast_in = (dst.port.multicast_in || []).filter(function (m) { return m.address !== l.stream; });
+        }
+      }
+      pruneSignalLinks();
       mirrorBPorts();
       afterChange();
       toast('已删除信号连线', 'ok');
     }, '删除');
 }
 
-/** 端口组播写回（校验：列表内不重复 + 不与其他端口冲突；B 口只读） */
+/** 端口组播写回（校验：仅 IP 口 + 列表内不重复 + 不与其他端口冲突；B 口只读） */
 function applyPortMulticast(port, nextOuts, live) {
   if (isMirror(port)) return false;
+  if (port.type !== 'ip_port') { toast('只有 IP 端口能配置组播', 'warn'); return false; }
   var cleaned = nextOuts.filter(function (e) { return String(e.address || '').trim() || String(e.name || '').trim(); })
     .map(function (e) { return { id: e.id || uid('mc'), address: String(e.address || '').trim(), name: String(e.name || '').trim() }; });
   var addrs = cleaned.map(function (e) { return e.address; }).filter(Boolean);
@@ -2106,11 +2121,12 @@ function openDoc(rec) {
   disarm();
   S.undo = [];                                  // 换图即换世界：撤销栈不跨图
   S.redo = [];
+  var lay = deep(rec.layout || {});
   S.doc = {
     id: rec.id,
     name: rec.name,
     graph: deep(rec.graph),
-    layout: Object.assign(emptyLayout(), deep(rec.layout || emptyLayout()))
+    layout: { version: lay.version || LAYOUT_V, nodes: lay.nodes || {} }   // 顺带剥掉旧记录里的 viewport
   };
   S.view.selectedDevice = '';
   S.view.selectedFlow = '';
@@ -2344,7 +2360,7 @@ function deviceFormHtml(work) {
         '<td style="width:120px"><select style="width:100%" data-port="' + esc(p.id) + '" data-f="type">' + portTypeOptions(p.type) + '</select></td>' +
         '<td style="width:66px">' + (dir === 'out' && p.type !== 'ip_port'
           ? '<label class="inline"><input type="checkbox" data-port="' + esc(p.id) + '" data-f="bidi"' + (p.bidirectional ? ' checked' : '') + '>双向</label>'
-          : '<span class="tag">双向</span>') + '</td>' +
+          : '<span class="tag">' + (p.type === 'ip_port' || p.bidirectional ? '双向' : '单向') + '</span>') + '</td>' +
         '<td style="width:64px">' + (p.type === 'ip_port'
           ? '<button class="mini" data-mc-port="' + esc(p.id) + '">组播</button>' : '') + '</td>' +
         '<td style="width:58px"><button class="mini danger" data-del-port="' + esc(p.id) + '">删除</button></td>' +
@@ -2824,7 +2840,8 @@ function onCanvasPointerDown(e) {
     if (last && last.key === key && now - last.t < 320) {
       S.view.lastPortDown = null;
       var found = portByRef(ref.device, ref.port);
-      if (found && isBidi(found.port)) { disarm(); openMulticastModal(found.port, { live: true }); return; }
+      // 组播只属于 IP 口：SDI/ASI 即便勾了「双向」也不开组播弹窗（配置了也会被当幽灵数据清掉）
+      if (found && found.port.type === 'ip_port' && isBidi(found.port)) { disarm(); openMulticastModal(found.port, { live: true }); return; }
     }
     S.view.lastPortDown = { key: key, t: now };
 
@@ -2983,7 +3000,8 @@ function onContextMenu(e) {
   });
   items.push({ sep: true });
   items.push({ label: '添加设备…', onClick: openAddDeviceDialog });
-  items.push({ label: '整理布局', onClick: tidyLayout });
+  // 关系图是只读视图：整理布局会重排光纤视图的手拖坐标，在这里对用户完全不可见，禁用之
+  items.push({ label: '整理布局', disabled: S.view.mode === 'relation', onClick: tidyLayout });
   items.push({ label: '适应画布', onClick: function () { fitView(); } });
   items.push({ sep: true });
   items.push({ label: '设备模板…', onClick: openTemplateManager });
@@ -3183,6 +3201,7 @@ window.__SF__ = {
   updateDevice: updateDevice,
   connect: connect,
   connectSignal: connectSignal,
+  deleteSignalLink: deleteSignalLink,
   snapshot: snapshot,
   undo: undo,
   redo: redo,
