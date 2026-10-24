@@ -180,6 +180,8 @@ button,input,select,textarea{font-family:inherit}
 @keyframes flowDash{to{stroke-dashoffset:-240}}
 .edge-hit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}
 .lbl-bg{fill:rgba(8,15,27,.92);stroke-width:1;stroke-opacity:.55}
+.lbl-bg.hit{cursor:pointer}
+.lbl-bg.hit:hover{stroke-opacity:1;stroke-width:1.6}
 .lbl-tx{font-size:11px;font-weight:600;pointer-events:none;user-select:none;paint-order:stroke;stroke:#080f1b;stroke-width:3px;stroke-linejoin:round}
 
 /* ---------- 空状态 ---------- */
@@ -501,7 +503,7 @@ var LAYOUT_V = 1;
 var NODE_PAD = 10;      // 设备卡片内边距
 var NAME_H  = 20;       // 设备名称占位高度
 var PORT_ROW = 20;      // 端口行距
-var SPARSE_ROW = 5;     // 「端口间距放大」倍数
+var SPARSE_ROW = 10;    // 「端口间距放大」倍数
 var UNDO_CAP = 30;
 
 var SIGNAL_COLORS = { ip: '#4aa3df', sdi: '#5fc46b', asi: '#c76bb4' };
@@ -1424,8 +1426,8 @@ function buildSegments() {
   } else {
     var flows = allFlows();
     if (S.view.selectedFlow) flows = flows.filter(function (f) { return f.address === S.view.selectedFlow; });
-    // 流多的时候线上标签会糊成一片：默认只给选中的流（或流数很少时）标名字，
-    // 其余靠颜色 + 右侧流面板对应，选中某条流后它的标签会出来
+    // 物理连线上的流覆盖段：流多时标签会糊成一片，默认只给选中的流（或流数很少时）标名字。
+    // 信号连线段不受此门控——它的标签就是信号源/流名，常显且可点删（见下）。
     var showLabels = !!S.view.selectedFlow || flows.length <= 3;
     var byAddr = {};
     flows.forEach(function (f) { byAddr[f.address] = f; });
@@ -1457,7 +1459,7 @@ function buildSegments() {
       var f = byAddr[l.stream];
       segs.push({
         kind: 'sig', sigId: l.id, from: l.from, to: l.to,
-        color: flowColor(l.stream), label: showLabels ? ((f && f.name) || l.stream) : '', width: 3, dash: '8 4'
+        color: flowColor(l.stream), label: (f && f.name) || l.stream, width: 3, dash: '8 4'
       });
     });
   }
@@ -1488,13 +1490,16 @@ function segSvg(seg) {
     out += '<path class="edge-hit" d="' + geo.d + '"' + hitAttr + ' />';
   }
   if (seg.label) {
-    // 标签压在线上（贝塞尔 t=0.5 处）；并排多流时按扇形偏移轻推，减少标签互相压字
+    // 标签压在线上（贝塞尔 t=0.5 处）；并排多流时按扇形偏移轻推，减少标签互相压字。
+    // 标签背景与线本体挂同一个 data-sig/data-link：点线或点标签都能删（标签比线好点得多）
     var nudge = clamp(((seg.fromOff || 0) + (seg.toOff || 0)) * 0.35, -11, 11);
     var lx = geo.mid.x + geo.px * nudge;
     var ly = geo.mid.y + geo.py * nudge;
     var w = labelWidth(seg.label);
     var x = lx - w / 2, y = ly - 10;
-    out += '<rect class="lbl-bg" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + w + '" height="20" rx="5" stroke="' + color + '"/>' +
+    var lblHit = !!(seg.linkId || seg.sigId);
+    out += '<rect class="lbl-bg' + (lblHit ? ' hit' : '') + '"' + (lblHit ? hitAttr : '') +
+      ' x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + w + '" height="20" rx="5" stroke="' + color + '"/>' +
       '<text class="lbl-tx" x="' + lx.toFixed(1) + '" y="' + (ly + 4).toFixed(1) + '" text-anchor="middle" fill="' + color + '">' + esc(seg.label) + '</text>';
   }
   return out;
@@ -2357,7 +2362,7 @@ function deviceFormHtml(work) {
     '<div class="row"><label class="w120">设备类型</label><span class="tag">' + esc(work.type) + '</span>' +
       '<span class="ds">' + esc(tpl ? (tpl.name + (tpl.description ? ' · ' + tpl.description : '')) : '自定义类型') + '</span></div>' +
     '<div class="row"><label class="w120">端口间距</label><label class="inline">' +
-      '<input type="checkbox" data-f="sparse"' + (work.sparse_ports ? ' checked' : '') + '> 放大 5 倍（端口密集、连线汇聚看不清时勾选）</label></div>' +
+      '<input type="checkbox" data-f="sparse"' + (work.sparse_ports ? ' checked' : '') + '> 放大 10 倍（端口密集、连线汇聚看不清时勾选）</label></div>' +
     '</div>';
 
   function portRows(list, dir) {

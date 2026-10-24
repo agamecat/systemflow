@@ -588,6 +588,47 @@ function httpJson(url) {
   check('P3-4: 陡峭汇聚扇形的控制点不越过端口（曲线不绕卡片背后）',
     fanGeom.n === 10 && fanGeom.bad === 0 && fanGeom.worst <= 0, fanGeom);
 
+  // 10) 信号连线标签常显（信号源/流名），且点标签本身就能删线
+  const lbl = await ev(`(function(){
+    var rects=[].slice.call(document.querySelectorAll('#svg rect.lbl-bg[data-sig]'));
+    for(var i=0;i<rects.length;i++){
+      var r=rects[i], b=r.getBoundingClientRect();
+      var cx=b.left+b.width/2, cy=b.top+b.height/2;
+      if(cx<0||cy<0||cx>innerWidth||cy>innerHeight) continue;
+      // 标签中心点的最顶层命中必须解析回同一条信号连线（标签可点且不被别的线挡住）
+      var el=document.elementFromPoint(cx,cy);
+      var hit=el&&el.closest?el.closest('[data-sig]'):null;
+      if(hit&&hit.getAttribute('data-sig')===r.getAttribute('data-sig')){
+        var tx=r.parentNode.querySelector('text.lbl-tx');
+        return {found:true, text:tx?tx.textContent:'', sig:r.getAttribute('data-sig'), x:cx, y:cy};
+      }
+    }
+    return {found:false};
+  })()`);
+  check('P3-5: 信号连线常显源名标签且可点', lbl.found && !!lbl.text, lbl);
+  if (lbl.found) {
+    await click({ x: lbl.x, y: lbl.y });
+    const dlg = await ev('(function(){var m=document.querySelectorAll(".mask");return m.length?m[m.length-1].querySelector(".mhead b").textContent:null;})()');
+    check('P3-5: 点标签弹出删除确认', dlg === '删除信号连线', dlg);
+    if (dlg) {
+      await ev('(function(){var b=document.querySelectorAll(".mask [data-mbtn]");b[b.length-1].click();})()');
+      await sleep(200);
+      const gone = await ev('(function(){return !__SF__.links().some(function(l){return l.id===' + JSON.stringify(lbl.sig) + ';});})()');
+      check('P3-5: 确认后删除该信号连线', gone === true);
+    }
+  }
+
+  // 11) 端口间距放大倍数 10：勾选后卡片高度按 ×10 行距增长
+  const sparse10 = await ev(`(function(){
+    var d=__SF__.S.doc.graph.devices.filter(function(x){return x.id==='rg_v1';})[0];
+    var before=__SF__.geom('rg_v1').h;
+    var next=JSON.parse(JSON.stringify(d)); next.sparse_ports=true;
+    __SF__.updateDevice('rg_v1', next);
+    var after=__SF__.geom('rg_v1').h;
+    return {before:before, after:after};
+  })()`);
+  check('P3-6: 端口间距放大为 10 倍行距', sparse10.before === 60 && sparse10.after === 240, sparse10);
+
   // ==========================================================================
   const failed = checks.filter((c) => !c.pass);
   console.log('\n==== 结果 ====');

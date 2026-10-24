@@ -45,7 +45,7 @@
 | `type` | string | 设备模板类型（见模板表），如 `SDI-Source`、`Net-Switch` |
 | `ports` | Port[] | 该设备全部端口（输入输出统一列表，方向见 Port.direction） |
 | `inner_links` | InnerLink[] | 设备内部直通关系（信号不做处理），**按 port number 引用** |
-| `sparse_ports` | bool | - | 端口间距放大（编辑界面勾选）：输入口/输出口行距 ×5，密集连线汇聚看不清时使用。缺省 false |
+| `sparse_ports` | bool | - | 端口间距放大（编辑界面勾选）：输入口/输出口行距 ×10，密集连线汇聚看不清时使用。缺省 false |
 
 ### Port（端口）
 
