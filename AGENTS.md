@@ -7,7 +7,7 @@
 **基带 IP 系统信号流图编辑器**：广播行业用来画"设备—端口—信号"拓扑的工具。
 
 核心能力：
-- **双视图**：光纤连接图（物理连线）/ IP 路由图（按组播地址追踪信号流）
+- **三视图**：光纤连接图（物理连线）/ IP 路由图（按组播地址追踪信号流）/ 关系图（自动分层，只读）
 - **JSON 为唯一事实源**：信号图本体（SignalGraph v2）驱动一切，画布只是派生
 - **零依赖单文件**：`sysflow.html` 一个文件包含 HTML/CSS/JS，双击用浏览器打开即用；无构建、无后端、无网络请求
 
@@ -16,8 +16,9 @@
 ```
 sysflow.html      全部代码（单文件）
 docs/             数据模型与可视化方法论
-data/             脱敏示例图（7 设备 / 6 连线 / 3 路流，由 tools/make-mock-data.py 生成）+ 3 个模板
-tools/            e2e.cjs 自检、import-sqlite.py 旧库转换
+data/             示例图：sample-system-diagram.json（7 设备合成）+ studio-system-diagram.json（23 设备演播室样例）
+                  + device-templates.json（3 个模板）
+tools/            e2e.cjs 自检、make-mock-data.py 生成脱敏样例、import-sqlite.py 旧库转换
 ```
 
 ## 仓库与运行
@@ -33,11 +34,14 @@ GitHub：https://github.com/agamecat/systemflow （public 镜像，同一份代�
 
 **推送**（本机不保存令牌，每次由用户临时提供，用完不落盘）：
 ```bash
-git -c credential.helper= push "https://cnb:<token>@cnb.cool/gamecatobs/sysflow.git" main
-git -c credential.helper= push "https://agamecat:<pat>@github.com/agamecat/systemflow.git" main
+# 环境里的 http_proxy/https_proxy 会让 git 死在 TLS 握手，必须四个变量一起清
+http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= \
+  git -c http.proxy= -c https.proxy= -c credential.helper= \
+  push "https://cnb:<token>@cnb.cool/gamecatobs/sysflow.git" main
 git ls-remote "<带令牌的远端>" refs/heads/main   # 核对远端真值（两边都要核）
 ```
-显式 URL 推送不会更新本地 `origin/main`，推完用
+本地 `github` remote 走 `https://ghfast.top/https://github.com/...` 加速，直连失败时换回裸地址再推。
+显式 URL 推送不会更新本地引用，推完用
 `git update-ref refs/remotes/origin/main <远端SHA>` 对齐。
 提交身份用仓库级 `sysflow <sysflow@local>`（未配全局身份）。
 
@@ -144,9 +148,9 @@ git ls-remote "<带令牌的远端>" refs/heads/main   # 核对远端真值（�
 
 ## 当前状态与已知限制
 
-已完成（2026-10-23 单文件重构，端到端自检 49 项全绿）：
-双视图、设备增删改、端口与组播编辑、信号连线与流追踪、B 口镜像、撤销重做、图库/自动保存/导入导出、
-适应画布、整理布局、深色 UI、示例图。
+已完成（单文件重构后持续迭代，端到端自检 49 项全绿）：
+三视图（光纤连接 / IP 路由 / 关系图）、设备增删改、端口与组播编辑、信号连线与流追踪、B 口镜像、
+撤销重做、图库/自动保存/导入导出、适应画布、整理布局、深色 UI、示例图。
 
 已知限制（按优先级）：
 - **无多人协作**：数据只在本机浏览器，靠导出/导入交换。
@@ -167,7 +171,7 @@ node --check .tmp_check.js
 node tools/e2e.cjs 9224 .tmp
 ```
 
-`tools/e2e.cjs` 覆盖：启动无报错、示例建图、流追踪路径、双视图段数、撤销重做、连线校验与 1口1线顶替、
+`tools/e2e.cjs` 覆盖：启动无报错、示例建图、流追踪路径、三视图段数与关系图只读（不写回坐标）、撤销重做、连线校验与 1口1线顶替、
 组播派生与孤儿清理、schema 字段、设备编辑/组播弹窗、图库保存与刷新恢复、真实鼠标拖拽/拖线/双击/滚轮/平移/点线删除；
 回归用例：B 口不能选流/拖线、弹窗打开时 Delete 无效、带 BOM 的 JSON 可导入、同设备双口同地址保存被拒、
 非 IP 端口组播配置被拒、同地址双信号连线删一条保留另一条、被追踪的信号连线只画一次（流覆盖层不与信号连线段重复）、陡峭汇聚扇形控制点不越过端口、信号连线标签常显且点标签可删线、端口间距放大 10 倍。
